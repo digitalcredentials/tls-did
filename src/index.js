@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-//TODO import contract from tls-did-registry
 import TLSDIDJson from 'tls-did-registry/build/contracts/TLSDID.json';
 import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
 //TODO how do we access the contracts bytcode needed for deployment
