@@ -34,7 +34,7 @@ export default class TLSDID {
     await this.signSmartContract();
   }
 
-  registerSmartContract(domain) {
+  async registerSmartContract(domain) {
     const registry = new ethers.Contract(
       REGISTRY,
       TLSDIDRegistryJson.abi,
@@ -42,7 +42,11 @@ export default class TLSDID {
     );
     const registryWithSigner = registry.connect(this.wallet);
     const did = `did:tls:${domain}`;
-    registryWithSigner.addTLSDIDContract(did, this.contract.address);
+    const tx = await registryWithSigner.addTLSDIDContract(
+      did,
+      this.contract.address
+    );
+    await tx.wait();
   }
 
   async signSmartContract() {}

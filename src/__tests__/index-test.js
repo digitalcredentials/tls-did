@@ -28,7 +28,7 @@ describe('TLSDID', () => {
   });
 
   it('register TLSDID contract', async () => {
-    tlsDid.registerSmartContract('exampe.org');
+    await tlsDid.registerSmartContract('example.org');
     //TODO assert corectness
   });
 
