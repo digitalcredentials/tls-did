@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 //Tested with ganache
 const jsonRpcUrl = 'http://localhost:8545';
 const etherPrivateKey =
-  '0xf1754dbf725be2b757071b8eec59eb544cad333b61fe33e73d8bb8c516b780bc';
+  '0x9333ead7beb5c0432341e2e36f4a7b7c5fb0715ba9d00b82ad7d9fcfcddf61b5';
 
 describe('TLSDID', () => {
   const provider = new ethers.providers.JsonRpcProvider(jsonRpcUrl);

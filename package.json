@@ -23,6 +23,7 @@
     "jest": "^26.5.0"
   },
   "dependencies": {
-    "ethers": "^5.0.17"
+    "ethers": "^5.0.17",
+    "tls-did-registry": "github:tls-did-project/tls-did-registry#master"
   }
 }

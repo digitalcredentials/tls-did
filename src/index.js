@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 //TODO import contract from tls-did-registry
-import TLSDIDJson from './contracts/TLSDID.json';
-import TLSDIDRegistryJson from './contracts/TLSDIDSCRegistry.json';
+import TLSDIDJson from 'tls-did-registry/build/contracts/TLSDID.json';
+import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
 //TODO how do we access the contracts bytcode needed for deployment
 //TODO import from tls-did-registry or tls-did-resolver
 const REGISTRY = '0x7778280c8de2c1650fc0BEC6Dd40EA68D026ABED';
@@ -42,7 +42,7 @@ export default class TLSDID {
     );
     const registryWithSigner = registry.connect(this.wallet);
     const did = `did:tls:${domain}`;
-    const tx = await registryWithSigner.addTLSDIDContract(
+    const tx = await registryWithSigner.registerContract(
       did,
       this.contract.address
     );
