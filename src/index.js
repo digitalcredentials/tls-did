@@ -31,9 +31,9 @@ export default class TLSDID {
     this.wallet = new ethers.Wallet(ethereumPrivateKey, provider);
   }
 
-  async connectToContract(contractAddress) {
+  async connectToContract(address) {
     const contract = new ethers.Contract(
-      contractAddress,
+      address,
       TLSDIDJson.abi,
       this.provider
     );
@@ -93,5 +93,7 @@ export default class TLSDID {
     this.signature = signature;
   }
 
-  addAttribute() {}
+  addAttribute() {
+    //TODO
+  }
 }

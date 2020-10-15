@@ -10,7 +10,7 @@ const REGISTRY = '0x651a4efe8221447261ed8a6fe8a75D971C94f79c';
 const jsonRpcUrl = 'http://localhost:8545';
 const etherPrivateKey =
   '0x3c9609c8ce6e37a6d799f204d1f49d2c4f15acb56c167f0809b8da3c49db8048';
-const pemPath = '/resources/ssl/private/testserver.pem';
+const pemPath = '/ssl/private/testserver.pem';
 
 describe('TLSDID', () => {
   const provider = new ethers.providers.JsonRpcProvider(jsonRpcUrl);
@@ -85,5 +85,9 @@ describe('TLSDID', () => {
     expect(tlsDidVerificationDuplicate.signature).toBe(tlsDid.signature);
 
     //TODO assert that signature is correct
+  });
+
+  it('should add attribute to TLSDID contract', async () => {
+    //TODO
   });
 });
