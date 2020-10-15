@@ -1,28 +1,50 @@
+import crypto from 'crypto';
 import { ethers } from 'ethers';
 import TLSDIDJson from 'tls-did-registry/build/contracts/TLSDID.json';
 import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
-//TODO how do we access the contracts bytcode needed for deployment
 //TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0x7778280c8de2c1650fc0BEC6Dd40EA68D026ABED';
+const REGISTRY = '0x651a4efe8221447261ed8a6fe8a75D971C94f79c';
+
+function hashContract(domain, address, attributes, expiry) {
+  //TODO implement if values are empty/undefined => ""
+  //TODO test use buffer?
+  const stringified = domain + address + attributes + expiry;
+  const hasher = crypto.createHash('sha256');
+  hasher.update(stringified);
+  const hash = hasher.digest('hex');
+  return hash;
+}
+
+function sign(pemKey, data) {
+  const signer = crypto.createSign('sha256');
+  signer.update(data);
+  signer.end();
+  const signature = signer.sign(pemKey).toString('base64');
+  return signature;
+}
 
 export default class TLSDID {
-  constructor(pemPath, ethereumPrivateKey, provider) {
-    this.pemPath = pemPath;
+  constructor(pemPrivateKey, ethereumPrivateKey, provider) {
+    this.pemPrivateKey = pemPrivateKey;
     this.ethereumPrivateKey = ethereumPrivateKey;
     this.provider = provider;
     this.wallet = new ethers.Wallet(ethereumPrivateKey, provider);
   }
 
-  connectToContract(contractAddress) {
+  async connectToContract(contractAddress) {
     const contract = new ethers.Contract(
       contractAddress,
       TLSDIDJson.abi,
       this.provider
     );
     this.contract = contract.connect(this.wallet);
+    this.domain = await contract.domain();
+    this.expiry = await contract.expiry();
+    this.attributes = await contract.getAttributes();
+    this.signature = await contract.signature();
   }
 
-  async deloySmartContract() {
+  async deployContract() {
     const factory = new ethers.ContractFactory(
       TLSDIDJson.abi,
       TLSDIDJson.bytecode,
@@ -30,25 +52,46 @@ export default class TLSDID {
     );
     this.contract = await factory.deploy();
     await this.contract.deployed();
-    await this.signSmartContract();
   }
 
-  async registerSmartContract(domain) {
+  async registerContract(domain) {
+    if (domain?.length === 0) {
+      throw new Error('No domain provided');
+    }
+    const tx1 = await this.contract.setDomain(domain);
+    await tx1.wait();
+    this.domain = domain;
+    const did = `did:tls:${this.domain}`;
+
     const registry = new ethers.Contract(
       REGISTRY,
       TLSDIDRegistryJson.abi,
       this.provider
     );
     const registryWithSigner = registry.connect(this.wallet);
-    const did = `did:tls:${domain}`;
-    const tx = await registryWithSigner.registerContract(
+
+    const tx2 = await registryWithSigner.registerContract(
       did,
       this.contract.address
     );
-    await tx.wait();
+    await tx2.wait();
   }
 
-  async signSmartContract() {}
+  async signContract() {
+    if (this.domain?.length === 0) {
+      throw new Error('No domain provided');
+    }
+    const hash = hashContract(
+      this.domain,
+      this.contract.address,
+      this.attributes,
+      this.expiry
+    );
+    const signature = sign(this.pemPrivateKey, hash);
+    const tx = await this.contract.setSignature(signature);
+    await tx.wait();
+    this.signature = signature;
+  }
 
   addAttribute() {}
 }
