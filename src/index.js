@@ -3,22 +3,23 @@ import { ethers } from 'ethers';
 import TLSDIDJson from 'tls-did-registry/build/contracts/TLSDID.json';
 import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
 //TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0xF7fBa67a3f6b05A9E0DA8DcB1f44aE037134eAE4';
+const REGISTRY = '0xe28131a74c9Fb412f0e57AD4614dB1A8D6a01793';
 
 function hashContract(domain, address, attributes, expiry) {
-  if (typeof attributes === 'undefined') {
-    attributes = '';
+  //TODO test use byte array?
+  let attributeString = '';
+  if (typeof attributes !== 'undefined') {
+    attributes.forEach(
+      (attribute) => (attributeString += attribute.path + attribute.value)
+    );
   }
   if (typeof expiry === 'undefined') {
     expiry = '';
   }
-  //TODO test use buffer?
-  const stringified = domain + address + attributes + expiry;
+  const stringified = domain + address + attributeString + expiry;
   const hasher = crypto.createHash('sha256');
   hasher.update(stringified);
-  console.log(stringified);
   const hash = hasher.digest('base64');
-  console.log(hash);
   return hash;
 }
 
@@ -27,11 +28,11 @@ function sign(pemKey, data) {
   signer.update(data);
   signer.end();
   const signature = signer.sign(pemKey).toString('base64');
-  console.log(signature);
   return signature;
 }
 
 export default class TLSDID {
+  attributes = [];
   constructor(pemPrivateKey, ethereumPrivateKey, provider) {
     this.pemPrivateKey = pemPrivateKey;
     this.ethereumPrivateKey = ethereumPrivateKey;
@@ -48,8 +49,17 @@ export default class TLSDID {
     this.contract = contract.connect(this.wallet);
     this.domain = await contract.domain();
     this.expiry = await contract.expiry();
-    this.attributes = await contract.getAttributes();
+    const attributeCount = await contract.getAttributeCount();
+    let attributes = [];
+    for (let i = 0; i < attributeCount; i++) {
+      const attribute = await contract.getAttribute(i);
+      const path = attribute['0'];
+      const value = attribute['1'];
+      attributes.push({ path, value });
+    }
+    this.attributes = attributes;
     this.signature = await contract.signature();
+    return this.attributes;
   }
 
   async deployContract() {
@@ -68,7 +78,9 @@ export default class TLSDID {
     }
     const tx1 = await this.contract.setDomain(domain);
     await tx1.wait();
+    //TODO if successful
     this.domain = domain;
+    await this.signContract();
     const did = `did:tls:${this.domain}`;
 
     const registry = new ethers.Contract(
@@ -98,10 +110,15 @@ export default class TLSDID {
     const signature = sign(this.pemPrivateKey, hash);
     const tx = await this.contract.setSignature(signature);
     await tx.wait();
+    //TODO if successful
     this.signature = signature;
   }
 
-  addAttribute() {
-    //TODO
+  async addAttribute(path, value) {
+    const tx = await this.contract.addAttribute(path, value);
+    await tx.wait();
+    //TODO if successful
+    this.attributes.push({ path, value });
+    await this.signContract();
   }
 }
