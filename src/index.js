@@ -3,15 +3,22 @@ import { ethers } from 'ethers';
 import TLSDIDJson from 'tls-did-registry/build/contracts/TLSDID.json';
 import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
 //TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0x651a4efe8221447261ed8a6fe8a75D971C94f79c';
+const REGISTRY = '0xF7fBa67a3f6b05A9E0DA8DcB1f44aE037134eAE4';
 
 function hashContract(domain, address, attributes, expiry) {
-  //TODO implement if values are empty/undefined => ""
+  if (typeof attributes === 'undefined') {
+    attributes = '';
+  }
+  if (typeof expiry === 'undefined') {
+    expiry = '';
+  }
   //TODO test use buffer?
   const stringified = domain + address + attributes + expiry;
   const hasher = crypto.createHash('sha256');
   hasher.update(stringified);
-  const hash = hasher.digest('hex');
+  console.log(stringified);
+  const hash = hasher.digest('base64');
+  console.log(hash);
   return hash;
 }
 
@@ -20,6 +27,7 @@ function sign(pemKey, data) {
   signer.update(data);
   signer.end();
   const signature = signer.sign(pemKey).toString('base64');
+  console.log(signature);
   return signature;
 }
 

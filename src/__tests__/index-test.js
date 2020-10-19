@@ -4,12 +4,12 @@ import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.
 import TLSDID from '../index';
 
 //TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0x651a4efe8221447261ed8a6fe8a75D971C94f79c';
+const REGISTRY = '0xF7fBa67a3f6b05A9E0DA8DcB1f44aE037134eAE4';
 
 //Tested with ganache
 const jsonRpcUrl = 'http://localhost:8545';
 const etherPrivateKey =
-  '0x3c9609c8ce6e37a6d799f204d1f49d2c4f15acb56c167f0809b8da3c49db8048';
+  '0xf31a1f53e94c46aea88507a237e1ae93e0e89afa4cdb499160d7f9579bd7ca5a';
 const pemPath = '/ssl/private/testserver.pem';
 
 describe('TLSDID', () => {
