@@ -4,12 +4,12 @@ import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.
 import TLSDID from '../index';
 
 //TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0xF7fBa67a3f6b05A9E0DA8DcB1f44aE037134eAE4';
+const REGISTRY = '0xe28131a74c9Fb412f0e57AD4614dB1A8D6a01793';
 
 //Tested with ganache
 const jsonRpcUrl = 'http://localhost:8545';
 const etherPrivateKey =
-  '0xf31a1f53e94c46aea88507a237e1ae93e0e89afa4cdb499160d7f9579bd7ca5a';
+  '0x023f495b18846a05bf31d9a52670869895658f40f30838e53ce7a119704734a6';
 const pemPath = '/ssl/private/testserver.pem';
 
 describe('TLSDID', () => {
@@ -88,6 +88,22 @@ describe('TLSDID', () => {
   });
 
   it('should add attribute to TLSDID contract', async () => {
-    //TODO
+    await tlsDid.addAttribute('parent/child', 'value');
+    //Assert that the new attribute is stored in the TLSDID object
+    const includedO = tlsDid.attributes.some((item) => {
+      return item.path === 'parent/child' && item.value === 'value';
+    });
+    expect(includedO).toBeTruthy();
+    //Assert that the new attribute is stored in the TLSDID contract
+    const tlsDidVerificationDuplicate = new TLSDID(
+      pemKey,
+      etherPrivateKey,
+      provider
+    );
+    const test = await tlsDidVerificationDuplicate.connectToContract(address);
+    const includedC = tlsDidVerificationDuplicate.attributes.some((item) => {
+      return item.path === 'parent/child' && item.value === 'value';
+    });
+    expect(includedC).toBeTruthy();
   });
 });
