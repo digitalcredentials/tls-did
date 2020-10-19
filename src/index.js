@@ -1,27 +1,10 @@
 import crypto from 'crypto';
 import { ethers } from 'ethers';
+import { hashContract } from 'tls-did-resolver';
 import TLSDIDJson from 'tls-did-registry/build/contracts/TLSDID.json';
 import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
 //TODO import from tls-did-registry or tls-did-resolver
 const REGISTRY = '0xe28131a74c9Fb412f0e57AD4614dB1A8D6a01793';
-
-function hashContract(domain, address, attributes, expiry) {
-  //TODO test use byte array?
-  let attributeString = '';
-  if (typeof attributes !== 'undefined') {
-    attributes.forEach(
-      (attribute) => (attributeString += attribute.path + attribute.value)
-    );
-  }
-  if (typeof expiry === 'undefined') {
-    expiry = '';
-  }
-  const stringified = domain + address + attributeString + expiry;
-  const hasher = crypto.createHash('sha256');
-  hasher.update(stringified);
-  const hash = hasher.digest('base64');
-  return hash;
-}
 
 function sign(pemKey, data) {
   const signer = crypto.createSign('sha256');
