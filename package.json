@@ -25,6 +25,6 @@
   "dependencies": {
     "ethers": "^5.0.17",
     "tls-did-registry": "github:tls-did-project/tls-did-registry#master",
-    "tls-did-resolver": "github:tls-did-project/tls-did-resolver#feature/typescript"
+    "tls-did-resolver": "github:tls-did-project/tls-did-resolver#master"
   }
 }
