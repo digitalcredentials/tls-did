@@ -2,8 +2,9 @@
   "name": "tls-did",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "scripts": {
+    "build": "npx tsc",
     "test": "jest"
   },
   "repository": {
@@ -20,7 +21,10 @@
     "@babel/cli": "^7.11.6",
     "@babel/core": "^7.11.6",
     "@babel/preset-env": "^7.11.5",
-    "jest": "^26.5.0"
+    "@types/jest": "^26.0.15",
+    "jest": "^26.5.0",
+    "ts-jest": "^26.4.3",
+    "typescript": "^4.0.5"
   },
   "dependencies": {
     "ethers": "^5.0.17",
