@@ -6,12 +6,12 @@ import TLSDID from '../index';
 //TODO verify signatures after value updates
 
 //TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0x3be60Ca05feFafAD11610A5Cd4A098b584709750';
+const REGISTRY = '0xf5513bc073A86394a0Fa26F11318D5D30AeAf550';
 
 //Tested with ganache
 const jsonRpcUrl = 'http://localhost:8545';
 const etherPrivateKey =
-  '0x0c9fb564e037ba5442ea504cda96e6f21f744a8fca3360de411d2f2d27689dc1';
+  '0x0c8409af9c479d1af65ccfc4f7ecc1fcc219ea0f42dc3351ef9181b0ae28bcd1';
 const pemPath = '/ssl/private/testserver.pem';
 
 let provider: providers.JsonRpcProvider;
@@ -53,8 +53,6 @@ describe('TLSDID', () => {
 
     //Assert that connected TLSDID Contract has correct address
     expect(tlsDidVerificationDuplicate.getAddress()).toEqual(address);
-
-    //TODO Assert contracts with assigned values
   });
 
   it('should register TLSDID contract', async () => {
@@ -66,14 +64,14 @@ describe('TLSDID', () => {
     const addresses = await registry.getContracts(domain);
     expect(addresses.includes(tlsDid.getAddress())).toBeTruthy();
 
-    // //Assert that domain is stored TLSDID contract
-    // const tlsDidVerificationDuplicate = new TLSDID(
-    //   pemKey,
-    //   etherPrivateKey,
-    //   provider
-    // );
-    // await tlsDidVerificationDuplicate.connectToContract(address);
-    // expect(tlsDidVerificationDuplicate.domain).toBe(domain);
+    //Assert that domain is stored TLSDID contract
+    const tlsDidVerificationDuplicate = new TLSDID(
+      pemKey,
+      etherPrivateKey,
+      provider
+    );
+    await tlsDidVerificationDuplicate.connectToContract(address);
+    expect(tlsDidVerificationDuplicate.domain).toBe(domain);
   });
 
   it('should add attribute to TLSDID contract', async () => {
@@ -96,5 +94,22 @@ describe('TLSDID', () => {
       return item.path === 'parent/child' && item.value === 'value';
     });
     expect(includedC).toBeTruthy();
+  });
+
+  it('should add expiry to TLSDID contract', async () => {
+    const expiry = new Date();
+    await tlsDid.setExpiry(expiry);
+
+    //Assert that expiry is updated in TLSDID object
+    expect(tlsDid.expiry).toBe(expiry);
+
+    //Assert that expiry is stored TLSDID contract
+    const tlsDidVerificationDuplicate = new TLSDID(
+      pemKey,
+      etherPrivateKey,
+      provider
+    );
+    await tlsDidVerificationDuplicate.connectToContract(address);
+    expect(tlsDidVerificationDuplicate.expiry).toStrictEqual(expiry);
   });
 });
