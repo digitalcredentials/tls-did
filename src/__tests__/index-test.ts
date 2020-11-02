@@ -97,7 +97,7 @@ describe('TLSDID', () => {
   });
 
   it('should add expiry to TLSDID contract', async () => {
-    const expiry = new Date();
+    const expiry = new Date('12 / 12 / 2040');
     await tlsDid.setExpiry(expiry);
 
     //Assert that expiry is updated in TLSDID object

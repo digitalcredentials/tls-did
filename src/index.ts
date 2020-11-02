@@ -11,7 +11,7 @@ import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.
 import { sign } from './utils';
 
 //TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0x3be60Ca05feFafAD11610A5Cd4A098b584709750';
+const REGISTRY = '0xf5513bc073A86394a0Fa26F11318D5D30AeAf550';
 
 export default class TLSDID {
   private pemPrivateKey: string;
