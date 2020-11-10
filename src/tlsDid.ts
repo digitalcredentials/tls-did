@@ -72,7 +72,7 @@ export class TLSDID {
     await this.contract.deployed();
   }
 
-  async registerContract(domain: string) {
+  async registerContract(domain: string): Promise<void> {
     if (domain?.length === 0) {
       throw new Error('No domain provided');
     }
