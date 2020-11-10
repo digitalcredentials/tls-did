@@ -14,9 +14,9 @@ import { sign } from './utils';
 const REGISTRY = '0xA725A297b0F81c502df772DBE2D0AEb68788679b';
 
 export class TLSDID {
+  private registry: string;
   private pemPrivateKey: string;
   private provider: providers.JsonRpcProvider;
-  private registry: string;
   private wallet: Wallet;
   private contract: Contract;
   domain: string;
@@ -24,6 +24,15 @@ export class TLSDID {
   expiry: Date;
   signature: string;
 
+  /**
+   * //TODO Allow for general provider type, see ethr-did implementation
+   * Creates an instance of tlsdid.
+   * @param {string} pemPrivateKey - TLS private key
+   * @param {string} ethereumPrivateKey - ethereum private key with enougth
+   * funds to pay for transactions
+   * @param {ethers.providers.JsonRpcProvider} provider - ethereum provider
+   * @param {string} [registry] - ethereum address of TLS DID Contract Registry
+   */
   constructor(
     pemPrivateKey: string,
     ethereumPrivateKey: string,
@@ -36,6 +45,10 @@ export class TLSDID {
     this.registry = registry;
   }
 
+  /**
+   * Connects to existing TLS DID contract
+   * @param {string} address - ethereum address of existing TLS DID Contract
+   */
   async connectToContract(address: string): Promise<void> {
     //Create contract object and connect to contract
     const contract = new Contract(address, TLSDIDJson.abi, this.provider);
@@ -61,6 +74,9 @@ export class TLSDID {
     this.signature = await contract.signature();
   }
 
+  /**
+   * Deploys TLS DID Contract
+   */
   async deployContract(): Promise<void> {
     const factory = new ContractFactory(
       TLSDIDJson.abi,
@@ -71,6 +87,10 @@ export class TLSDID {
     await this.contract.deployed();
   }
 
+  /**
+   * Registers TLS DID Contract with TLS DID Registry
+   * @param {string} domain - tls:did:<domain>
+   */
   async registerContract(domain: string): Promise<void> {
     if (domain?.length === 0) {
       throw new Error('No domain provided');
@@ -86,7 +106,7 @@ export class TLSDID {
     );
     const registryWithSigner = registry.connect(this.wallet);
 
-    //Register tls did contract address on registry
+    //Register TLS DID Contract address on registry
     const tx = await registryWithSigner.registerContract(
       domain,
       this.contract.address
@@ -97,6 +117,10 @@ export class TLSDID {
     }
   }
 
+  /**
+   * Sets domain
+   * @param {string} domain - tls:did:<domain>
+   */
   private async setDomain(domain: string): Promise<void> {
     const tx = await this.contract.setDomain(domain);
     const receipt = await tx.wait();
@@ -107,6 +131,11 @@ export class TLSDID {
     }
   }
 
+  /**
+   * Adds attribute to DID Document
+   * @param {string} path - Path of value, format 'parent/child'
+   * @param {string} value - Value stored in path
+   */
   async addAttribute(path: string, value: string): Promise<void> {
     const tx = await this.contract.addAttribute(path, value);
     await tx.wait();
@@ -119,6 +148,10 @@ export class TLSDID {
     }
   }
 
+  /**
+   * Sets expiry of TLS DID Contract
+   * @param {Date} date - Expiry date
+   */
   async setExpiry(date: Date): Promise<void> {
     const expiry = date.getTime();
     const tx = await this.contract.setExpiry(expiry);
@@ -132,6 +165,9 @@ export class TLSDID {
     }
   }
 
+  /**
+   * Signs the TLS DID Contract
+   */
   private async signContract(): Promise<void> {
     if (this.domain?.length === 0) {
       throw new Error('No domain provided');
@@ -156,6 +192,10 @@ export class TLSDID {
     }
   }
 
+  /**
+   * Gets address
+   * @returns {string} address
+   */
   getAddress(): string {
     if (!this.contract) {
       throw new Error('No linked ethereum contract available');
