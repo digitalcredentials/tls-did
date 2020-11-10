@@ -19,5 +19,5 @@ npm run test
 Should be run before commit
 
 ```
-npm run buils
+npm run build
 ```
