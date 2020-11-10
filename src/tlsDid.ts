@@ -11,11 +11,12 @@ import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.
 import { sign } from './utils';
 
 //TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0xf5513bc073A86394a0Fa26F11318D5D30AeAf550';
+const REGISTRY = '0xA725A297b0F81c502df772DBE2D0AEb68788679b';
 
 export class TLSDID {
   private pemPrivateKey: string;
   private provider: providers.JsonRpcProvider;
+  private registry: string;
   private wallet: Wallet;
   private contract: Contract;
   domain: string;
@@ -26,11 +27,13 @@ export class TLSDID {
   constructor(
     pemPrivateKey: string,
     ethereumPrivateKey: string,
-    provider: providers.JsonRpcProvider
+    provider: providers.JsonRpcProvider,
+    registry: string = REGISTRY
   ) {
     this.pemPrivateKey = pemPrivateKey;
     this.provider = provider;
     this.wallet = new Wallet(ethereumPrivateKey, provider);
+    this.registry = registry;
   }
 
   async connectToContract(address: string): Promise<void> {
@@ -69,7 +72,7 @@ export class TLSDID {
     await this.contract.deployed();
   }
 
-  async registerContract(domain: string): Promise<void> {
+  async registerContract(domain: string) {
     if (domain?.length === 0) {
       throw new Error('No domain provided');
     }
@@ -78,7 +81,7 @@ export class TLSDID {
 
     //Create registry contract object and connect to contract
     const registry = new Contract(
-      REGISTRY,
+      this.registry,
       TLSDIDRegistryJson.abi,
       this.provider
     );
@@ -91,7 +94,7 @@ export class TLSDID {
     );
     const receipt = await tx.wait();
     if (receipt.status === 0) {
-      throw 'registerContract unsuccesfull';
+      throw new Error('registerContract unsuccesfull');
     }
   }
 
@@ -101,7 +104,7 @@ export class TLSDID {
     if (receipt.status === 1) {
       this.domain = domain;
     } else {
-      throw 'setDomain unsuccesfull';
+      throw new Error('setDomain unsuccesfull');
     }
   }
 
@@ -113,7 +116,7 @@ export class TLSDID {
       this.attributes.push({ path, value });
       await this.signContract();
     } else {
-      throw 'setAttribute unsuccesfull';
+      throw new Error('setAttribute unsuccesfull');
     }
   }
 
@@ -126,7 +129,7 @@ export class TLSDID {
       this.expiry = date;
       await this.signContract();
     } else {
-      throw 'setExpiry unsuccesfull';
+      throw new Error('setExpiry unsuccesfull');
     }
   }
 
@@ -150,13 +153,13 @@ export class TLSDID {
     if (receipt.status === 1) {
       this.signature = signature;
     } else {
-      throw 'setSignature unsuccesfull';
+      throw new Error('setSignature unsuccesfull');
     }
   }
 
   getAddress(): string {
     if (!this.contract) {
-      throw 'contract not setup';
+      throw new Error('No linked ethereum contract available');
     }
     return this.contract.address;
   }

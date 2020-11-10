@@ -1,17 +1,17 @@
 import { Contract, providers } from 'ethers';
 import { readFileSync } from 'fs';
 import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
-import TLSDID from '../index';
+import { TLSDID } from '../index';
 
 //TODO verify signatures after value updates
 
 //TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0xf5513bc073A86394a0Fa26F11318D5D30AeAf550';
+const REGISTRY = '0xA725A297b0F81c502df772DBE2D0AEb68788679d';
 
 //Tested with ganache
 const jsonRpcUrl = 'http://localhost:8545';
 const etherPrivateKey =
-  '0x0c8409af9c479d1af65ccfc4f7ecc1fcc219ea0f42dc3351ef9181b0ae28bcd1';
+  '0x2afa99eb4bb26f02f1d2f40808e5cc629c78dcd8a9f54ff5a7fb2e5dae6e702b';
 const pemPath = '/ssl/private/testserver.pem';
 
 let provider: providers.JsonRpcProvider;
@@ -25,7 +25,7 @@ describe('TLSDID', () => {
     pemKey = readFileSync(__dirname + pemPath, 'utf8');
   });
   it('should instantiate TLSDID object', () => {
-    tlsDid = new TLSDID(pemKey, etherPrivateKey, provider);
+    tlsDid = new TLSDID(pemKey, etherPrivateKey, provider, REGISTRY);
 
     //Assert that tlsDid has been instantiated
     expect(tlsDid).toBeDefined();
@@ -40,19 +40,20 @@ describe('TLSDID', () => {
   });
 
   it('should connect to TLSDID contract', async () => {
-    const tlsDidVerificationDuplicate = new TLSDID(
+    const tlsDidDuplicate = new TLSDID(
       pemKey,
       etherPrivateKey,
-      provider
+      provider,
+      REGISTRY
     );
 
     //Assert that connecting to existing TLSDID Contract does not throw error
     expect(
-      async () => await tlsDidVerificationDuplicate.connectToContract(address)
+      async () => await tlsDidDuplicate.connectToContract(address)
     ).not.toThrow();
 
     //Assert that connected TLSDID Contract has correct address
-    expect(tlsDidVerificationDuplicate.getAddress()).toEqual(address);
+    expect(tlsDidDuplicate.getAddress()).toEqual(address);
   });
 
   it('should register TLSDID contract', async () => {
@@ -65,13 +66,14 @@ describe('TLSDID', () => {
     expect(addresses.includes(tlsDid.getAddress())).toBeTruthy();
 
     //Assert that domain is stored TLSDID contract
-    const tlsDidVerificationDuplicate = new TLSDID(
+    const tlsDidDuplicate = new TLSDID(
       pemKey,
       etherPrivateKey,
-      provider
+      provider,
+      REGISTRY
     );
-    await tlsDidVerificationDuplicate.connectToContract(address);
-    expect(tlsDidVerificationDuplicate.domain).toBe(domain);
+    await tlsDidDuplicate.connectToContract(address);
+    expect(tlsDidDuplicate.domain).toBe(domain);
   });
 
   it('should add attribute to TLSDID contract', async () => {
@@ -84,13 +86,14 @@ describe('TLSDID', () => {
     expect(includedO).toBeTruthy();
 
     //Assert that the new attribute is stored in the TLSDID contract
-    const tlsDidVerificationDuplicate = new TLSDID(
+    const tlsDidDuplicate = new TLSDID(
       pemKey,
       etherPrivateKey,
-      provider
+      provider,
+      REGISTRY
     );
-    const test = await tlsDidVerificationDuplicate.connectToContract(address);
-    const includedC = tlsDidVerificationDuplicate.attributes.some((item) => {
+    const test = await tlsDidDuplicate.connectToContract(address);
+    const includedC = tlsDidDuplicate.attributes.some((item) => {
       return item.path === 'parent/child' && item.value === 'value';
     });
     expect(includedC).toBeTruthy();
@@ -104,12 +107,13 @@ describe('TLSDID', () => {
     expect(tlsDid.expiry).toBe(expiry);
 
     //Assert that expiry is stored TLSDID contract
-    const tlsDidVerificationDuplicate = new TLSDID(
+    const tlsDidDuplicate = new TLSDID(
       pemKey,
       etherPrivateKey,
-      provider
+      provider,
+      REGISTRY
     );
-    await tlsDidVerificationDuplicate.connectToContract(address);
-    expect(tlsDidVerificationDuplicate.expiry).toStrictEqual(expiry);
+    await tlsDidDuplicate.connectToContract(address);
+    expect(tlsDidDuplicate.expiry).toStrictEqual(expiry);
   });
 });
