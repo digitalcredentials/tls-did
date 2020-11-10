@@ -45,8 +45,7 @@ export class TLSDID {
     this.domain = await contract.domain();
 
     //Retrive expiry from contract
-    let expiryBN: BigNumber;
-    expiryBN = await contract.expiry();
+    const expiryBN: BigNumber = await contract.expiry();
     this.expiry = new Date(expiryBN.toNumber());
     const attributeCount = await contract.getAttributeCount();
 
