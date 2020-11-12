@@ -9,14 +9,27 @@ import { hashContract } from 'tls-did-resolver';
 import TLSDIDJson from 'tls-did-registry/build/contracts/TLSDID.json';
 import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
 import { sign } from './utils';
+import { IProviderConfig, IAttribute } from './types';
 
 //TODO import from tls-did-registry or tls-did-resolver
 const REGISTRY = '0xA725A297b0F81c502df772DBE2D0AEb68788679b';
 
+function configureProvider(conf: IProviderConfig = {}): providers.Provider {
+  if (conf.provider) {
+    return conf.provider;
+  }
+  if (conf.rpcUrl) {
+    return new providers.JsonRpcProvider(conf.rpcUrl);
+  }
+  if (conf.web3) {
+    return new providers.Web3Provider(conf.web3.currentProvider);
+  }
+}
+
 export class TLSDID {
   private registry: string;
   private pemPrivateKey: string;
-  private provider: providers.JsonRpcProvider;
+  private provider: providers.Provider;
   private wallet: Wallet;
   private contract: Contract;
   domain: string;
@@ -30,19 +43,19 @@ export class TLSDID {
    * @param {string} pemPrivateKey - TLS private key
    * @param {string} ethereumPrivateKey - ethereum private key with enougth
    * funds to pay for transactions
-   * @param {ethers.providers.JsonRpcProvider} provider - ethereum provider
    * @param {string} [registry] - ethereum address of TLS DID Contract Registry
+   * @param {IProviderConfig} providerConfig - config for ethereum provider {}
    */
   constructor(
     pemPrivateKey: string,
     ethereumPrivateKey: string,
-    provider: providers.JsonRpcProvider,
-    registry: string = REGISTRY
+    registry: string = REGISTRY,
+    providerConfig: IProviderConfig
   ) {
-    this.pemPrivateKey = pemPrivateKey;
-    this.provider = provider;
-    this.wallet = new Wallet(ethereumPrivateKey, provider);
     this.registry = registry;
+    this.pemPrivateKey = pemPrivateKey;
+    this.provider = configureProvider(providerConfig);
+    this.wallet = new Wallet(ethereumPrivateKey, this.provider);
   }
 
   /**

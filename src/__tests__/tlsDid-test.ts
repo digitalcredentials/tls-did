@@ -2,33 +2,43 @@ import { Contract, providers } from 'ethers';
 import { readFileSync } from 'fs';
 import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
 import { TLSDID } from '../index';
+import c from './testConfig.json';
 
 //TODO verify signatures after value updates
+//TODO import registry address from tls-did-registry or tls-did-resolver
 
-//TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0xA725A297b0F81c502df772DBE2D0AEb68788679d';
-
-//Tested with ganache
-const jsonRpcUrl = 'http://localhost:8545';
-const etherPrivateKey =
-  '0x2afa99eb4bb26f02f1d2f40808e5cc629c78dcd8a9f54ff5a7fb2e5dae6e702b';
-const pemPath = '/ssl/private/testserver.pem';
-
-let provider: providers.JsonRpcProvider;
 let pemKey: string;
 let tlsDid: TLSDID;
 let address: string;
 
+describe('TLSDID instantiation', () => {
+  beforeAll(() => {
+    pemKey = readFileSync(__dirname + c.pemPath, 'utf8');
+  });
+
+  it('should instantiate TLSDID with rpcUrl', () => {
+    let tlsDid = new TLSDID(pemKey, c.etherPrivKey, c.registryAddress, {
+      rpcUrl: c.jsonRpcUrl,
+    });
+    //Assert that the tlsDid has been instantiated
+    expect(tlsDid).toBeDefined();
+  });
+
+  it('should instantiate TLSDID with ethers provider', () => {
+    let tlsDid = new TLSDID(pemKey, c.etherPrivKey, c.registryAddress, {
+      provider: new providers.JsonRpcProvider(c.jsonRpcUrl),
+    });
+    //Assert that the tlsDid has been instantiated
+    expect(tlsDid).toBeDefined();
+  });
+});
+
 describe('TLSDID', () => {
   beforeAll(() => {
-    provider = new providers.JsonRpcProvider(jsonRpcUrl);
-    pemKey = readFileSync(__dirname + pemPath, 'utf8');
-  });
-  it('should instantiate TLSDID object', () => {
-    tlsDid = new TLSDID(pemKey, etherPrivateKey, provider, REGISTRY);
-
-    //Assert that tlsDid has been instantiated
-    expect(tlsDid).toBeDefined();
+    pemKey = readFileSync(__dirname + c.pemPath, 'utf8');
+    tlsDid = new TLSDID(pemKey, c.etherPrivKey, c.registryAddress, {
+      rpcUrl: c.jsonRpcUrl,
+    });
   });
 
   it('should deploy new TLSDID contract', async () => {
@@ -42,9 +52,11 @@ describe('TLSDID', () => {
   it('should connect to TLSDID contract', async () => {
     const tlsDidDuplicate = new TLSDID(
       pemKey,
-      etherPrivateKey,
-      provider,
-      REGISTRY
+      c.etherPrivKey,
+      c.registryAddress,
+      {
+        rpcUrl: c.jsonRpcUrl,
+      }
     );
 
     //Assert that connecting to existing TLSDID Contract does not throw error
@@ -61,16 +73,22 @@ describe('TLSDID', () => {
     await tlsDid.registerContract(domain);
 
     //Assert that DID to contract mapping is stored in registry
-    const registry = new Contract(REGISTRY, TLSDIDRegistryJson.abi, provider);
+    const registry = new Contract(
+      c.registryAddress,
+      TLSDIDRegistryJson.abi,
+      new providers.JsonRpcProvider(c.jsonRpcUrl)
+    );
     const addresses = await registry.getContracts(domain);
     expect(addresses.includes(tlsDid.getAddress())).toBeTruthy();
 
     //Assert that domain is stored TLSDID contract
     const tlsDidDuplicate = new TLSDID(
       pemKey,
-      etherPrivateKey,
-      provider,
-      REGISTRY
+      c.etherPrivKey,
+      c.registryAddress,
+      {
+        rpcUrl: c.jsonRpcUrl,
+      }
     );
     await tlsDidDuplicate.connectToContract(address);
     expect(tlsDidDuplicate.domain).toBe(domain);
@@ -88,9 +106,11 @@ describe('TLSDID', () => {
     //Assert that the new attribute is stored in the TLSDID contract
     const tlsDidDuplicate = new TLSDID(
       pemKey,
-      etherPrivateKey,
-      provider,
-      REGISTRY
+      c.etherPrivKey,
+      c.registryAddress,
+      {
+        rpcUrl: c.jsonRpcUrl,
+      }
     );
     const test = await tlsDidDuplicate.connectToContract(address);
     const includedC = tlsDidDuplicate.attributes.some((item) => {
@@ -109,9 +129,11 @@ describe('TLSDID', () => {
     //Assert that expiry is stored TLSDID contract
     const tlsDidDuplicate = new TLSDID(
       pemKey,
-      etherPrivateKey,
-      provider,
-      REGISTRY
+      c.etherPrivKey,
+      c.registryAddress,
+      {
+        rpcUrl: c.jsonRpcUrl,
+      }
     );
     await tlsDidDuplicate.connectToContract(address);
     expect(tlsDidDuplicate.expiry).toStrictEqual(expiry);
