@@ -8,13 +8,13 @@ import {
 import { hashContract } from 'tls-did-resolver';
 import TLSDIDJson from 'tls-did-registry/build/contracts/TLSDID.json';
 import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
+import { ProviderConfig, Attribute } from './types';
 import { sign } from './utils';
-import { IProviderConfig, IAttribute } from './types';
 
 //TODO import from tls-did-registry or tls-did-resolver
 const REGISTRY = '0xA725A297b0F81c502df772DBE2D0AEb68788679b';
 
-function configureProvider(conf: IProviderConfig = {}): providers.Provider {
+function configureProvider(conf: ProviderConfig = {}): providers.Provider {
   if (conf.provider) {
     return conf.provider;
   }
@@ -33,7 +33,7 @@ export class TLSDID {
   private wallet: Wallet;
   private contract: Contract;
   domain: string;
-  attributes: IAttribute[] = [];
+  attributes: Attribute[] = [];
   expiry: Date;
   signature: string;
 
@@ -50,7 +50,7 @@ export class TLSDID {
     pemPrivateKey: string,
     ethereumPrivateKey: string,
     registry: string = REGISTRY,
-    providerConfig: IProviderConfig
+    providerConfig: ProviderConfig
   ) {
     this.registry = registry;
     this.pemPrivateKey = pemPrivateKey;

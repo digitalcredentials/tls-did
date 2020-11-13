@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
+    "rootDir": "src",
     "target": "es5",
+    "declaration": true,
     "module": "commonjs",
     "sourceMap": true,
     "outDir": "lib/",
@@ -9,5 +11,8 @@
   },
   "exclude": [
     "src/__tests__/*"
+  ],
+  "include": [
+    "src/**/*"
   ]
 }

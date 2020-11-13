@@ -1,12 +1,12 @@
 import { providers } from 'ethers';
 
-interface IAttribute {
+export type Attribute = {
   path: string;
   value: string;
-}
+};
 
-interface IProviderConfig {
+export type ProviderConfig = {
   provider?: providers.Provider;
   rpcUrl?: string;
   web3?: any;
-}
+};
