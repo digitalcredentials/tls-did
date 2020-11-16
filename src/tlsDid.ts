@@ -146,7 +146,7 @@ export class TLSDID {
 
   /**
    * Adds attribute to DID Document
-   * @param {string} path - Path of value, format 'parent/child'
+   * @param {string} path - Path of value, format 'parent/child' or 'parent[]/child'
    * @param {string} value - Value stored in path
    */
   async addAttribute(path: string, value: string): Promise<void> {
