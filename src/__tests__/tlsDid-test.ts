@@ -16,6 +16,12 @@ describe('TLSDID instantiation', () => {
     pemKey = readFileSync(__dirname + c.pemPath, 'utf8');
   });
 
+  it('should instantiate TLSDID without provider', () => {
+    let tlsDid = new TLSDID(pemKey, c.etherPrivKey, c.registryAddress);
+    //Assert that the tlsDid has been instantiated
+    expect(tlsDid).toBeDefined();
+  });
+
   it('should instantiate TLSDID with rpcUrl', () => {
     let tlsDid = new TLSDID(pemKey, c.etherPrivKey, c.registryAddress, {
       rpcUrl: c.jsonRpcUrl,

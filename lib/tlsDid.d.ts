@@ -18,7 +18,7 @@ export declare class TLSDID {
      * @param {string} [registry] - ethereum address of TLS DID Contract Registry
      * @param {IProviderConfig} providerConfig - config for ethereum provider {}
      */
-    constructor(pemPrivateKey: string, ethereumPrivateKey: string, registry: string, providerConfig: ProviderConfig);
+    constructor(pemPrivateKey: string, ethereumPrivateKey: string, registry?: string, providerConfig?: ProviderConfig);
     /**
      * Connects to existing TLS DID contract
      * @param {string} address - ethereum address of existing TLS DID Contract
@@ -40,7 +40,7 @@ export declare class TLSDID {
     private setDomain;
     /**
      * Adds attribute to DID Document
-     * @param {string} path - Path of value, format 'parent/child'
+     * @param {string} path - Path of value, format 'parent/child' or 'parent[]/child'
      * @param {string} value - Value stored in path
      */
     addAttribute(path: string, value: string): Promise<void>;
