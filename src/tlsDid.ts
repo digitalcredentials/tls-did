@@ -9,22 +9,10 @@ import { hashContract } from 'tls-did-resolver';
 import TLSDIDJson from 'tls-did-registry/build/contracts/TLSDID.json';
 import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
 import { ProviderConfig, Attribute } from './types';
-import { sign } from './utils';
+import { sign, configureProvider } from './utils';
 
 //TODO import from tls-did-registry or tls-did-resolver
 const REGISTRY = '0xA725A297b0F81c502df772DBE2D0AEb68788679b';
-
-function configureProvider(conf: ProviderConfig = {}): providers.Provider {
-  if (conf.provider) {
-    return conf.provider;
-  }
-  if (conf.rpcUrl) {
-    return new providers.JsonRpcProvider(conf.rpcUrl);
-  }
-  if (conf.web3) {
-    return new providers.Web3Provider(conf.web3.currentProvider);
-  }
-}
 
 export class TLSDID {
   private registry: string;
@@ -50,7 +38,7 @@ export class TLSDID {
     pemPrivateKey: string,
     ethereumPrivateKey: string,
     registry: string = REGISTRY,
-    providerConfig: ProviderConfig
+    providerConfig: ProviderConfig = {}
   ) {
     this.registry = registry;
     this.pemPrivateKey = pemPrivateKey;
