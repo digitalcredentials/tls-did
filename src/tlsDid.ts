@@ -6,16 +6,19 @@ import {
   BigNumber,
 } from 'ethers';
 import { hashContract } from 'tls-did-resolver';
-import TLSDIDJson from 'tls-did-registry/build/contracts/TLSDID.json';
-import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
-import { ProviderConfig, Attribute } from './types';
+import TLSDIDContract from 'tls-did-registry/build/contracts/TLSDID.json';
+import TLSDIDRegistryContract from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
+import TLSDIDCertRegistryContract from 'tls-did-registry/build/contracts/TLSDIDCertRegistry.json';
+import { NetworkConfig, Attribute } from './types';
 import { sign, configureProvider } from './utils';
 
 //TODO import from tls-did-registry or tls-did-resolver
 const REGISTRY = '0xA725A297b0F81c502df772DBE2D0AEb68788679b';
+const CERT_REGISTRY = '0xE7dec5fB47AefF013d738Ae960f8Cc6AB43f6361';
 
 export class TLSDID {
   private registry: string;
+  private certRegistry: string;
   private pemPrivateKey: string;
   private provider: providers.Provider;
   private wallet: Wallet;
@@ -24,6 +27,7 @@ export class TLSDID {
   attributes: Attribute[] = [];
   expiry: Date;
   signature: string;
+  certs: string[] = [];
 
   /**
    * //TODO Allow for general provider type, see ethr-did implementation
@@ -37,12 +41,14 @@ export class TLSDID {
   constructor(
     pemPrivateKey: string,
     ethereumPrivateKey: string,
-    registry: string = REGISTRY,
-    providerConfig: ProviderConfig = {}
+    networkConfig: NetworkConfig = {}
   ) {
-    this.registry = registry;
+    this.registry = networkConfig.registry ? networkConfig.registry : REGISTRY;
+    this.certRegistry = networkConfig.certRegistry
+      ? networkConfig.certRegistry
+      : CERT_REGISTRY;
     this.pemPrivateKey = pemPrivateKey;
-    this.provider = configureProvider(providerConfig);
+    this.provider = configureProvider(networkConfig.providerConfig);
     this.wallet = new Wallet(ethereumPrivateKey, this.provider);
   }
 
@@ -52,7 +58,7 @@ export class TLSDID {
    */
   async connectToContract(address: string): Promise<void> {
     //Create contract object and connect to contract
-    const contract = new Contract(address, TLSDIDJson.abi, this.provider);
+    const contract = new Contract(address, TLSDIDContract.abi, this.provider);
     this.contract = contract.connect(this.wallet);
 
     //Retrive domain from contract
@@ -80,8 +86,8 @@ export class TLSDID {
    */
   async deployContract(): Promise<void> {
     const factory = new ContractFactory(
-      TLSDIDJson.abi,
-      TLSDIDJson.bytecode,
+      TLSDIDContract.abi,
+      TLSDIDContract.bytecode,
       this.wallet
     );
     this.contract = await factory.deploy();
@@ -102,7 +108,7 @@ export class TLSDID {
     //Create registry contract object and connect to contract
     const registry = new Contract(
       this.registry,
-      TLSDIDRegistryJson.abi,
+      TLSDIDRegistryContract.abi,
       this.provider
     );
     const registryWithSigner = registry.connect(this.wallet);
@@ -202,5 +208,32 @@ export class TLSDID {
       throw new Error('No linked ethereum contract available');
     }
     return this.contract.address;
+  }
+
+  async registerCerts(certs: string[]) {
+    if (!this.domain) {
+      throw new Error('No domain available, register contract first');
+    }
+    // TODO global address
+    // Delete certs
+    // What to do when cert expire / are invalid
+    const certRegistry = new Contract(
+      this.certRegistry,
+      TLSDIDCertRegistryContract.abi,
+      this.provider
+    );
+
+    const certRegistryWithSigner = certRegistry.connect(this.wallet);
+
+    for (const cert of certs) {
+      const tx = await certRegistryWithSigner.addCert(this.domain, cert);
+      const receipt = await tx.wait();
+      if (receipt.status === 1) {
+        this.certs.push(cert);
+      } else {
+        //TODO Rollback if idx > 0?
+        throw new Error(`registerCerts unsuccesfull`);
+      }
+    }
   }
 }

@@ -1,6 +1,7 @@
-import { Contract, providers } from 'ethers';
+import { Contract, providers, BigNumber } from 'ethers';
 import { readFileSync } from 'fs';
-import TLSDIDRegistryJson from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
+import TLSDIDRegistryContract from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
+import TLSDIDCertRegistryContract from 'tls-did-registry/build/contracts/TLSDIDCertRegistry.json';
 import { TLSDID } from '../index';
 import c from './testConfig.json';
 
@@ -16,23 +17,31 @@ describe('TLSDID instantiation', () => {
     pemKey = readFileSync(__dirname + c.pemPath, 'utf8');
   });
 
-  it('should instantiate TLSDID without provider', () => {
-    let tlsDid = new TLSDID(pemKey, c.etherPrivKey, c.registryAddress);
+  it('should instantiate TLSDID without provider and registry addresses', () => {
+    let tlsDid = new TLSDID(pemKey, c.etherPrivKey);
     //Assert that the tlsDid has been instantiated
     expect(tlsDid).toBeDefined();
   });
 
   it('should instantiate TLSDID with rpcUrl', () => {
-    let tlsDid = new TLSDID(pemKey, c.etherPrivKey, c.registryAddress, {
-      rpcUrl: c.jsonRpcUrl,
+    let tlsDid = new TLSDID(pemKey, c.etherPrivKey, {
+      registry: c.registryAddress,
+      certRegistry: c.certRegistryAddress,
+      providerConfig: {
+        rpcUrl: c.jsonRpcUrl,
+      },
     });
     //Assert that the tlsDid has been instantiated
     expect(tlsDid).toBeDefined();
   });
 
   it('should instantiate TLSDID with ethers provider', () => {
-    let tlsDid = new TLSDID(pemKey, c.etherPrivKey, c.registryAddress, {
-      provider: new providers.JsonRpcProvider(c.jsonRpcUrl),
+    let tlsDid = new TLSDID(pemKey, c.etherPrivKey, {
+      registry: c.registryAddress,
+      certRegistry: c.certRegistryAddress,
+      providerConfig: {
+        provider: new providers.JsonRpcProvider(c.jsonRpcUrl),
+      },
     });
     //Assert that the tlsDid has been instantiated
     expect(tlsDid).toBeDefined();
@@ -42,8 +51,12 @@ describe('TLSDID instantiation', () => {
 describe('TLSDID', () => {
   beforeAll(() => {
     pemKey = readFileSync(__dirname + c.pemPath, 'utf8');
-    tlsDid = new TLSDID(pemKey, c.etherPrivKey, c.registryAddress, {
-      rpcUrl: c.jsonRpcUrl,
+    tlsDid = new TLSDID(pemKey, c.etherPrivKey, {
+      registry: c.registryAddress,
+      certRegistry: c.certRegistryAddress,
+      providerConfig: {
+        rpcUrl: c.jsonRpcUrl,
+      },
     });
   });
 
@@ -56,14 +69,13 @@ describe('TLSDID', () => {
   });
 
   it('should connect to TLSDID contract', async () => {
-    const tlsDidDuplicate = new TLSDID(
-      pemKey,
-      c.etherPrivKey,
-      c.registryAddress,
-      {
+    const tlsDidDuplicate = new TLSDID(pemKey, c.etherPrivKey, {
+      registry: c.registryAddress,
+      certRegistry: c.certRegistryAddress,
+      providerConfig: {
         rpcUrl: c.jsonRpcUrl,
-      }
-    );
+      },
+    });
 
     //Assert that connecting to existing TLSDID Contract does not throw error
     expect(
@@ -81,21 +93,20 @@ describe('TLSDID', () => {
     //Assert that DID to contract mapping is stored in registry
     const registry = new Contract(
       c.registryAddress,
-      TLSDIDRegistryJson.abi,
+      TLSDIDRegistryContract.abi,
       new providers.JsonRpcProvider(c.jsonRpcUrl)
     );
     const addresses = await registry.getContracts(domain);
     expect(addresses.includes(tlsDid.getAddress())).toBeTruthy();
 
     //Assert that domain is stored TLSDID contract
-    const tlsDidDuplicate = new TLSDID(
-      pemKey,
-      c.etherPrivKey,
-      c.registryAddress,
-      {
+    const tlsDidDuplicate = new TLSDID(pemKey, c.etherPrivKey, {
+      registry: c.registryAddress,
+      certRegistry: c.certRegistryAddress,
+      providerConfig: {
         rpcUrl: c.jsonRpcUrl,
-      }
-    );
+      },
+    });
     await tlsDidDuplicate.connectToContract(address);
     expect(tlsDidDuplicate.domain).toBe(domain);
   });
@@ -110,14 +121,13 @@ describe('TLSDID', () => {
     expect(includedO).toBeTruthy();
 
     //Assert that the new attribute is stored in the TLSDID contract
-    const tlsDidDuplicate = new TLSDID(
-      pemKey,
-      c.etherPrivKey,
-      c.registryAddress,
-      {
+    const tlsDidDuplicate = new TLSDID(pemKey, c.etherPrivKey, {
+      registry: c.registryAddress,
+      certRegistry: c.certRegistryAddress,
+      providerConfig: {
         rpcUrl: c.jsonRpcUrl,
-      }
-    );
+      },
+    });
     const test = await tlsDidDuplicate.connectToContract(address);
     const includedC = tlsDidDuplicate.attributes.some((item) => {
       return item.path === 'parent/child' && item.value === 'value';
@@ -133,15 +143,53 @@ describe('TLSDID', () => {
     expect(tlsDid.expiry).toBe(expiry);
 
     //Assert that expiry is stored TLSDID contract
-    const tlsDidDuplicate = new TLSDID(
-      pemKey,
-      c.etherPrivKey,
-      c.registryAddress,
-      {
+    const tlsDidDuplicate = new TLSDID(pemKey, c.etherPrivKey, {
+      registry: c.registryAddress,
+      certRegistry: c.certRegistryAddress,
+      providerConfig: {
         rpcUrl: c.jsonRpcUrl,
-      }
-    );
+      },
+    });
     await tlsDidDuplicate.connectToContract(address);
     expect(tlsDidDuplicate.expiry).toStrictEqual(expiry);
+  });
+
+  it('should register certs', async () => {
+    const certRegistry = new Contract(
+      c.certRegistryAddress,
+      TLSDIDCertRegistryContract.abi,
+      new providers.JsonRpcProvider(c.jsonRpcUrl)
+    );
+
+    //Get prior cert count
+    const certCountBN: BigNumber = await certRegistry.getCertCount(
+      tlsDid.domain
+    );
+    const certCount = certCountBN.toNumber();
+
+    //Register new certs
+    const certs = ['CertA', 'CertB'];
+    await tlsDid.registerCerts(certs);
+
+    //Assert that the number of stored cert increased by number of added certs
+    const _certCountBN: BigNumber = await certRegistry.getCertCount(
+      tlsDid.domain
+    );
+    const _certCount = _certCountBN.toNumber();
+    expect(_certCount - certCount).toBe(certs.length);
+
+    //Assert that the all certs can be retrived
+    let storedCerts = [];
+    for (let i = 0; i < _certCount; i++) {
+      const cert = await certRegistry.getCert(tlsDid.domain, i);
+      storedCerts.push(cert);
+    }
+    expect(storedCerts.length).toBe(_certCount);
+
+    //Assert that the the newest entries in the stored certs are equal to the added certs
+    certs.forEach((cert, i) => {
+      const storedCert = storedCerts[storedCerts.length - (certs.length - i)];
+      expect(storedCert).toBe(cert);
+    });
   });
 });

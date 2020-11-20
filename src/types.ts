@@ -10,3 +10,9 @@ export type ProviderConfig = {
   rpcUrl?: string;
   web3?: any;
 };
+
+export type NetworkConfig = {
+  registry?: string;
+  certRegistry?: string;
+  providerConfig?: ProviderConfig;
+};

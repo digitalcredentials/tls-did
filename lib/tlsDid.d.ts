@@ -1,6 +1,7 @@
-import { ProviderConfig, Attribute } from './types';
+import { NetworkConfig, Attribute } from './types';
 export declare class TLSDID {
     private registry;
+    private certRegistry;
     private pemPrivateKey;
     private provider;
     private wallet;
@@ -9,6 +10,7 @@ export declare class TLSDID {
     attributes: Attribute[];
     expiry: Date;
     signature: string;
+    certs: string[];
     /**
      * //TODO Allow for general provider type, see ethr-did implementation
      * Creates an instance of tlsdid.
@@ -18,7 +20,7 @@ export declare class TLSDID {
      * @param {string} [registry] - ethereum address of TLS DID Contract Registry
      * @param {IProviderConfig} providerConfig - config for ethereum provider {}
      */
-    constructor(pemPrivateKey: string, ethereumPrivateKey: string, registry?: string, providerConfig?: ProviderConfig);
+    constructor(pemPrivateKey: string, ethereumPrivateKey: string, networkConfig?: NetworkConfig);
     /**
      * Connects to existing TLS DID contract
      * @param {string} address - ethereum address of existing TLS DID Contract
@@ -58,4 +60,5 @@ export declare class TLSDID {
      * @returns {string} address
      */
     getAddress(): string;
+    registerCerts(certs: string[]): Promise<void>;
 }

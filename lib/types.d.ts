@@ -8,3 +8,8 @@ export declare type ProviderConfig = {
     rpcUrl?: string;
     web3?: any;
 };
+export declare type NetworkConfig = {
+    registry?: string;
+    certRegistry?: string;
+    providerConfig?: ProviderConfig;
+};
