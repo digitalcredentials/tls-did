@@ -60,5 +60,10 @@ export declare class TLSDID {
      * @returns {string} address
      */
     getAddress(): string;
+    /**
+     * Stores certs in the TLS DID Certificate Contract
+     * @dev Relies on domain stored in this.domain when calling registerContract
+     * @param certs
+     */
     registerCerts(certs: string[]): Promise<void>;
 }

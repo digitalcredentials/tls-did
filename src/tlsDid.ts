@@ -210,6 +210,11 @@ export class TLSDID {
     return this.contract.address;
   }
 
+  /**
+   * Stores certs in the TLS DID Certificate Contract
+   * @dev Relies on domain stored in this.domain when calling registerContract
+   * @param certs
+   */
   async registerCerts(certs: string[]) {
     if (!this.domain) {
       throw new Error('No domain available, register contract first');
