@@ -1,6 +1,6 @@
 {
-  "registryAddress": "0x9438f85ae536a22A0ef6044F255fFEc5Ee6e300D",
-  "certRegistryAddress": "0xE7dec5fB47AefF013d738Ae960f8Cc6AB43f6361",
+  "registryAddress": "0xA725A297b0F81c502df772DBE2D0AEb68788679d",
+  "certRegistryAddress": "0xBCC29C38aeA44A3B6576bF6fed8584BE63A910ac",
   "jsonRpcUrl": "http://localhost:8545",
   "etherPrivKey": "0x2afa99eb4bb26f02f1d2f40808e5cc629c78dcd8a9f54ff5a7fb2e5dae6e702b",
   "pemPath": "/ssl/private/testserver.pem"

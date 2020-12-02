@@ -4,6 +4,15 @@ import { ProviderConfig } from './types';
 
 /**
  * Signs data with pem private key
+ * @param {string} chain - String of aggregated pem certs
+ * @return {string[]} - Array of pem cert string
+ */
+export function chainToCerts(chain: string): string[] {
+  return chain.split(/\n(?=-----BEGIN CERTIFICATE-----)/g);
+}
+
+/**
+ * Signs data with pem private key
  * @param pemPrivateKey
  * @param data
  */

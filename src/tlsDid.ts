@@ -10,11 +10,11 @@ import TLSDIDContract from 'tls-did-registry/build/contracts/TLSDID.json';
 import TLSDIDRegistryContract from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
 import TLSDIDCertRegistryContract from 'tls-did-registry/build/contracts/TLSDIDCertRegistry.json';
 import { NetworkConfig, Attribute } from './types';
-import { sign, configureProvider } from './utils';
+import { sign, configureProvider, chainToCerts } from './utils';
 
 //TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0xA725A297b0F81c502df772DBE2D0AEb68788679b';
-const CERT_REGISTRY = '0xE7dec5fB47AefF013d738Ae960f8Cc6AB43f6361';
+const REGISTRY = '0xaF9BA0dFa7D79eA2d1cFD28996dEf081c29dA51e';
+const CERT_REGISTRY = '0x4d7648dE110574047EEa4F525Fd7FD10c318018e';
 
 export class TLSDID {
   private registry: string;
@@ -27,7 +27,7 @@ export class TLSDID {
   attributes: Attribute[] = [];
   expiry: Date;
   signature: string;
-  certs: string[] = [];
+  chains: string[][] = [];
 
   /**
    * //TODO Allow for general provider type, see ethr-did implementation
@@ -79,6 +79,21 @@ export class TLSDID {
 
     //Retrive signature from the contract
     this.signature = await contract.signature();
+
+    //Retrive registered certs
+    const certRegistry = new Contract(
+      this.certRegistry,
+      TLSDIDCertRegistryContract.abi,
+      this.provider
+    );
+    const chainCount = await certRegistry.getChainCount(this.domain);
+
+    this.chains = [];
+    for (let i = 0; i < chainCount; i++) {
+      const chain = await certRegistry.getChain(this.domain, i);
+      const certs = chainToCerts(chain);
+      this.chains.push(certs);
+    }
   }
 
   /**
@@ -213,32 +228,29 @@ export class TLSDID {
   /**
    * Stores certs in the TLS DID Certificate Contract
    * @dev Relies on domain stored in this.domain when calling registerContract
+   * Do not store root certificate, it is read from node
    * @param certs
    */
-  async registerCerts(certs: string[]) {
+  async registerChain(certs: string[]) {
     if (!this.domain) {
       throw new Error('No domain available, register contract first');
     }
     // TODO global address
-    // Delete certs
     // What to do when cert expire / are invalid
     const certRegistry = new Contract(
       this.certRegistry,
       TLSDIDCertRegistryContract.abi,
       this.provider
     );
-
     const certRegistryWithSigner = certRegistry.connect(this.wallet);
 
-    for (const cert of certs) {
-      const tx = await certRegistryWithSigner.addCert(this.domain, cert);
-      const receipt = await tx.wait();
-      if (receipt.status === 1) {
-        this.certs.push(cert);
-      } else {
-        //TODO Rollback if idx > 0?
-        throw new Error(`registerCerts unsuccesfull`);
-      }
+    const joinedCerts = certs.join('\n');
+    const tx = await certRegistryWithSigner.addChain(this.domain, joinedCerts);
+    const receipt = await tx.wait();
+    if (receipt.status === 1) {
+      this.chains.push(certs);
+    } else {
+      throw new Error(`addChain unsuccesfull`);
     }
   }
 }

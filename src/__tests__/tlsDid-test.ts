@@ -154,42 +154,53 @@ describe('TLSDID', () => {
     expect(tlsDidDuplicate.expiry).toStrictEqual(expiry);
   });
 
-  it('should register certs', async () => {
+  it('should register chain', async () => {
     const certRegistry = new Contract(
       c.certRegistryAddress,
       TLSDIDCertRegistryContract.abi,
       new providers.JsonRpcProvider(c.jsonRpcUrl)
     );
 
-    //Get prior cert count
-    const certCountBN: BigNumber = await certRegistry.getCertCount(
+    //Get prior cert chain count
+    const chainCountBN: BigNumber = await certRegistry.getChainCount(
       tlsDid.domain
     );
-    const certCount = certCountBN.toNumber();
+    const chainCount = chainCountBN.toNumber();
 
-    //Register new certs
-    const certs = ['CertA', 'CertB'];
-    await tlsDid.registerCerts(certs);
+    //Register new chain
+    const chain = [
+      '-----BEGIN CERTIFICATE-----\nCertA\n-----END CERTIFICATE-----',
+      '-----BEGIN CERTIFICATE-----\nCertB\n-----END CERTIFICATE-----',
+    ];
+    await tlsDid.registerChain(chain);
 
-    //Assert that the number of stored cert increased by number of added certs
-    const _certCountBN: BigNumber = await certRegistry.getCertCount(
+    //Assert that the number of stored cert increased by one
+    const _chainCountBN: BigNumber = await certRegistry.getChainCount(
       tlsDid.domain
     );
-    const _certCount = _certCountBN.toNumber();
-    expect(_certCount - certCount).toBe(certs.length);
+    const _chainCount = _chainCountBN.toNumber();
+    expect(_chainCount - chainCount).toBe(1);
 
-    //Assert that the all certs can be retrived
-    let storedCerts = [];
-    for (let i = 0; i < _certCount; i++) {
-      const cert = await certRegistry.getCert(tlsDid.domain, i);
-      storedCerts.push(cert);
+    //Assert that the all cert chains can be retrived
+    let _chains = [];
+    for (let i = 0; i < _chainCount; i++) {
+      const cert = await certRegistry.getChain(tlsDid.domain, i);
+      _chains.push(cert);
     }
-    expect(storedCerts.length).toBe(_certCount);
+    expect(_chains.length).toBe(_chainCount);
 
-    //Assert that the the newest entries in the stored certs are equal to the added certs
-    certs.forEach((cert, i) => {
-      const storedCert = storedCerts[storedCerts.length - (certs.length - i)];
-      expect(storedCert).toBe(cert);
+    //Assert that expiry is stored TLSDID contract
+    const tlsDidDuplicate = new TLSDID(pemKey, c.etherPrivKey, {
+      registry: c.registryAddress,
+      certRegistry: c.certRegistryAddress,
+      providerConfig: {
+        rpcUrl: c.jsonRpcUrl,
+      },
     });
+
+    await tlsDidDuplicate.connectToContract(address);
+    expect(tlsDidDuplicate.chains[tlsDidDuplicate.chains.length - 1]).toEqual(
+      chain
+    );
   });
 });
