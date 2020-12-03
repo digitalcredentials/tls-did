@@ -10,7 +10,7 @@ export declare class TLSDID {
     attributes: Attribute[];
     expiry: Date;
     signature: string;
-    certs: string[];
+    chains: string[][];
     /**
      * //TODO Allow for general provider type, see ethr-did implementation
      * Creates an instance of tlsdid.
@@ -63,7 +63,8 @@ export declare class TLSDID {
     /**
      * Stores certs in the TLS DID Certificate Contract
      * @dev Relies on domain stored in this.domain when calling registerContract
+     * Do not store root certificate, it is read from node
      * @param certs
      */
-    registerCerts(certs: string[]): Promise<void>;
+    registerChain(certs: string[]): Promise<void>;
 }
