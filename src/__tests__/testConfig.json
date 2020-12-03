@@ -3,5 +3,7 @@
   "certRegistryAddress": "0xBCC29C38aeA44A3B6576bF6fed8584BE63A910ac",
   "jsonRpcUrl": "http://localhost:8545",
   "etherPrivKey": "0x2afa99eb4bb26f02f1d2f40808e5cc629c78dcd8a9f54ff5a7fb2e5dae6e702b",
-  "pemPath": "/ssl/private/testserver.pem"
+  "privKeyPath": "/ssl/private/privKey.pem",
+  "certPath": "/ssl/certs/cert.pem",
+  "intermediateCert": "/ssl/certs/intermediateCert.pem"
 }

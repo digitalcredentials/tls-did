@@ -14,7 +14,7 @@ let address: string;
 
 describe('TLSDID instantiation', () => {
   beforeAll(() => {
-    pemKey = readFileSync(__dirname + c.pemPath, 'utf8');
+    pemKey = readFileSync(__dirname + c.privKeyPath, 'utf8');
   });
 
   it('should instantiate TLSDID without provider and registry addresses', () => {
@@ -50,7 +50,7 @@ describe('TLSDID instantiation', () => {
 
 describe('TLSDID', () => {
   beforeAll(() => {
-    pemKey = readFileSync(__dirname + c.pemPath, 'utf8');
+    pemKey = readFileSync(__dirname + c.privKeyPath, 'utf8');
     tlsDid = new TLSDID(pemKey, c.etherPrivKey, {
       registry: c.registryAddress,
       certRegistry: c.certRegistryAddress,
