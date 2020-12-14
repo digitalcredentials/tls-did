@@ -10,6 +10,5 @@ export declare type ProviderConfig = {
 };
 export declare type NetworkConfig = {
     registry?: string;
-    certRegistry?: string;
     providerConfig?: ProviderConfig;
 };

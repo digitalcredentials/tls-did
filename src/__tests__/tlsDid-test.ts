@@ -26,7 +26,6 @@ describe('TLSDID instantiation', () => {
   it('should instantiate TLSDID with rpcUrl', () => {
     let tlsDid = new TLSDID(pemKey, c.etherPrivKey, {
       registry: c.registryAddress,
-      certRegistry: c.certRegistryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
       },
@@ -38,7 +37,6 @@ describe('TLSDID instantiation', () => {
   it('should instantiate TLSDID with ethers provider', () => {
     let tlsDid = new TLSDID(pemKey, c.etherPrivKey, {
       registry: c.registryAddress,
-      certRegistry: c.certRegistryAddress,
       providerConfig: {
         provider: new providers.JsonRpcProvider(c.jsonRpcUrl),
       },
@@ -53,7 +51,6 @@ describe('TLSDID', () => {
     pemKey = readFileSync(__dirname + c.privKeyPath, 'utf8');
     tlsDid = new TLSDID(pemKey, c.etherPrivKey, {
       registry: c.registryAddress,
-      certRegistry: c.certRegistryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
       },
@@ -71,7 +68,6 @@ describe('TLSDID', () => {
   it('should connect to TLSDID contract', async () => {
     const tlsDidDuplicate = new TLSDID(pemKey, c.etherPrivKey, {
       registry: c.registryAddress,
-      certRegistry: c.certRegistryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
       },
@@ -102,7 +98,6 @@ describe('TLSDID', () => {
     //Assert that domain is stored TLSDID contract
     const tlsDidDuplicate = new TLSDID(pemKey, c.etherPrivKey, {
       registry: c.registryAddress,
-      certRegistry: c.certRegistryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
       },
@@ -123,7 +118,6 @@ describe('TLSDID', () => {
     //Assert that the new attribute is stored in the TLSDID contract
     const tlsDidDuplicate = new TLSDID(pemKey, c.etherPrivKey, {
       registry: c.registryAddress,
-      certRegistry: c.certRegistryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
       },
@@ -145,7 +139,6 @@ describe('TLSDID', () => {
     //Assert that expiry is stored TLSDID contract
     const tlsDidDuplicate = new TLSDID(pemKey, c.etherPrivKey, {
       registry: c.registryAddress,
-      certRegistry: c.certRegistryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
       },
@@ -155,18 +148,6 @@ describe('TLSDID', () => {
   });
 
   it('should register chain', async () => {
-    const certRegistry = new Contract(
-      c.certRegistryAddress,
-      TLSDIDCertRegistryContract.abi,
-      new providers.JsonRpcProvider(c.jsonRpcUrl)
-    );
-
-    //Get prior cert chain count
-    const chainCountBN: BigNumber = await certRegistry.getChainCount(
-      tlsDid.domain
-    );
-    const chainCount = chainCountBN.toNumber();
-
     //Register new chain
     const chain = [
       '-----BEGIN CERTIFICATE-----\nCertA\n-----END CERTIFICATE-----',
@@ -174,25 +155,9 @@ describe('TLSDID', () => {
     ];
     await tlsDid.registerChain(chain);
 
-    //Assert that the number of stored cert increased by one
-    const _chainCountBN: BigNumber = await certRegistry.getChainCount(
-      tlsDid.domain
-    );
-    const _chainCount = _chainCountBN.toNumber();
-    expect(_chainCount - chainCount).toBe(1);
-
-    //Assert that the all cert chains can be retrived
-    let _chains = [];
-    for (let i = 0; i < _chainCount; i++) {
-      const cert = await certRegistry.getChain(tlsDid.domain, i);
-      _chains.push(cert);
-    }
-    expect(_chains.length).toBe(_chainCount);
-
     //Assert that expiry is stored TLSDID contract
     const tlsDidDuplicate = new TLSDID(pemKey, c.etherPrivKey, {
       registry: c.registryAddress,
-      certRegistry: c.certRegistryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
       },

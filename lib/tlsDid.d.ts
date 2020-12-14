@@ -1,7 +1,6 @@
 import { NetworkConfig, Attribute } from './types';
 export declare class TLSDID {
     private registry;
-    private certRegistry;
     private pemPrivateKey;
     private provider;
     private wallet;
