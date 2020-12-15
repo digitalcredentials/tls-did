@@ -217,7 +217,7 @@ export class TLSDID {
    * @param certs
    * @param {string} key - Signing tls key in pem format
    */
-  async registerChain(certs: string[], key: string) {
+  async addChain(certs: string[], key: string) {
     const joinedCerts = certs.join('\n');
     const tx = await this.contract.addChain(joinedCerts);
     const receipt = await tx.wait();

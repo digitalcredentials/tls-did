@@ -152,7 +152,7 @@ describe('TLSDID', () => {
       '-----BEGIN CERTIFICATE-----\nCertA\n-----END CERTIFICATE-----',
       '-----BEGIN CERTIFICATE-----\nCertB\n-----END CERTIFICATE-----',
     ];
-    await tlsDid.registerChain(chain, pemKey);
+    await tlsDid.addChain(chain, pemKey);
 
     //Assert that expiry is stored TLSDID contract
     const tlsDidDuplicate = new TLSDID(c.etherPrivKey, {

@@ -68,5 +68,5 @@ export declare class TLSDID {
      * @param certs
      * @param {string} key - Signing tls key in pem format
      */
-    registerChain(certs: string[], key: string): Promise<void>;
+    addChain(certs: string[], key: string): Promise<void>;
 }

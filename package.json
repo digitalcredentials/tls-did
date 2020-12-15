@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "npx tsc",
-    "test": "jest"
+    "test": "jest",
+    "reload": "rm -rf node_modules && rm package-lock.json && npm i"
   },
   "repository": {
     "type": "git",
