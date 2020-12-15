@@ -1,7 +1,6 @@
 import { NetworkConfig, Attribute } from './types';
 export declare class TLSDID {
     private registry;
-    private pemPrivateKey;
     private provider;
     private wallet;
     private contract;
@@ -13,13 +12,12 @@ export declare class TLSDID {
     /**
      * //TODO Allow for general provider type, see ethr-did implementation
      * Creates an instance of tlsdid.
-     * @param {string} pemPrivateKey - TLS private key
      * @param {string} ethereumPrivateKey - ethereum private key with enougth
      * funds to pay for transactions
      * @param {string} [registry] - ethereum address of TLS DID Contract Registry
      * @param {IProviderConfig} providerConfig - config for ethereum provider {}
      */
-    constructor(pemPrivateKey: string, ethereumPrivateKey: string, networkConfig?: NetworkConfig);
+    constructor(ethereumPrivateKey: string, networkConfig?: NetworkConfig);
     /**
      * Connects to existing TLS DID contract
      * @param {string} address - ethereum address of existing TLS DID Contract
@@ -32,8 +30,9 @@ export declare class TLSDID {
     /**
      * Registers TLS DID Contract with TLS DID Registry
      * @param {string} domain - tls:did:<domain>
+     * @param {string} key - Signing tls key in pem format
      */
-    registerContract(domain: string): Promise<void>;
+    registerContract(domain: string, key: string): Promise<void>;
     /**
      * Sets domain
      * @param {string} domain - tls:did:<domain>
@@ -43,15 +42,18 @@ export declare class TLSDID {
      * Adds attribute to DID Document
      * @param {string} path - Path of value, format 'parent/child' or 'parent[]/child'
      * @param {string} value - Value stored in path
+     * @param {string} key - Signing tls key in pem format
      */
-    addAttribute(path: string, value: string): Promise<void>;
+    addAttribute(path: string, value: string, key: string): Promise<void>;
     /**
      * Sets expiry of TLS DID Contract
      * @param {Date} date - Expiry date
+     * @param {string} key - Signing tls key in pem format
      */
-    setExpiry(date: Date): Promise<void>;
+    setExpiry(date: Date, key: string): Promise<void>;
     /**
      * Signs the TLS DID Contract
+     * @param {string} key - Signing tls key in pem format
      */
     private signContract;
     /**
@@ -61,9 +63,10 @@ export declare class TLSDID {
     getAddress(): string;
     /**
      * Stores certs in the TLS DID Certificate Contract
-     * @dev Relies on domain stored in this.domain when calling registerContract
-     * Do not store root certificate, it is read from node
+     * @dev Do not store root certificates, they are passed to the resolver
+     * @todo What to do when cert expire / are invalid
      * @param certs
+     * @param {string} key - Signing tls key in pem format
      */
-    registerChain(certs: string[]): Promise<void>;
+    registerChain(certs: string[], key: string): Promise<void>;
 }

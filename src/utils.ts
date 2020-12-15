@@ -13,14 +13,14 @@ export function chainToCerts(chain: string): string[] {
 
 /**
  * Signs data with pem private key
- * @param pemPrivateKey
- * @param data
+ * @param {string} key - Signing key in pem format
+ * @param {string} data
  */
-export function sign(pemPrivateKey: string, data: string): string {
+export function sign(key: string, data: string): string {
   const signer = createSign('sha256');
   signer.update(data);
   signer.end();
-  const signature = signer.sign(pemPrivateKey).toString('base64');
+  const signature = signer.sign(key).toString('base64');
   return signature;
 }
 

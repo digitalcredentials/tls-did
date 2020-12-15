@@ -8,10 +8,10 @@ import { ProviderConfig } from './types';
 export declare function chainToCerts(chain: string): string[];
 /**
  * Signs data with pem private key
- * @param pemPrivateKey
- * @param data
+ * @param {string} key - Signing key in pem format
+ * @param {string} data
  */
-export declare function sign(pemPrivateKey: string, data: string): string;
+export declare function sign(key: string, data: string): string;
 /**
  * Returns the configured provider
  * @param {ProviderConfig} conf - Configuration for provider
