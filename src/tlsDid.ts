@@ -48,32 +48,58 @@ export class TLSDID {
     const contract = new Contract(address, TLSDIDContract.abi, this.provider);
     this.contract = contract.connect(this.wallet);
 
-    //Retrive domain from contract
-    this.domain = await contract.domain();
+    await Promise.all([
+      this.getDomain(),
+      this.getExpiry(),
+      this.getAttributes(),
+      this.getChains(),
+      this.getSignature(),
+    ]);
+  }
 
-    //Retrive expiry from contract
-    const expiryBN: BigNumber = await contract.expiry();
+  private async getDomain() {
+    this.domain = await this.contract.domain();
+  }
+
+  private async getExpiry() {
+    const expiryBN: BigNumber = await this.contract.expiry();
     this.expiry = new Date(expiryBN.toNumber());
+  }
 
-    //Retrive all attributes from the contract
-    const attributeCount = await contract.getAttributeCount();
-    for (let i = 0; i < attributeCount; i++) {
-      const attribute = await contract.getAttribute(i);
+  private async getAttributes() {
+    const attributeCountBN = await this.contract.getAttributeCount();
+    const attributeCount = attributeCountBN.toNumber();
+
+    //Creates and waits for an array of promisses each containing an getAttribute call
+    const attributes = await Promise.all(
+      Array.from(Array(attributeCount).keys()).map((i) =>
+        this.contract.getAttribute(i)
+      )
+    );
+
+    //Transforms array representation of attributes to object representation
+    attributes.forEach((attribute) => {
       const path = attribute['0'];
       const value = attribute['1'];
       this.attributes.push({ path, value });
-    }
+    });
+  }
 
-    //Retrive registered certs
-    const chainCount = await contract.getChainCount();
-    for (let i = 0; i < chainCount; i++) {
-      const chain = await contract.getChain(i);
-      const certs = chainToCerts(chain);
-      this.chains.push(certs);
-    }
+  private async getChains() {
+    const chainCountBN = await this.contract.getChainCount();
+    const chainCount = chainCountBN.toNumber();
 
-    //Retrive signature from the contract
-    this.signature = await contract.signature();
+    //Creates and waits for an array of promisses each containing an getChain call
+    const chains = await Promise.all(
+      Array.from(Array(chainCount).keys()).map((i) => this.contract.getChain(i))
+    );
+
+    //Splits concatenated cert string to array of certs
+    this.chains = chains.map((chain) => chainToCerts(chain));
+  }
+
+  private async getSignature() {
+    this.signature = await this.contract.signature();
   }
 
   /**
