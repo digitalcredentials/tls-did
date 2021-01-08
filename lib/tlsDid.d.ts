@@ -23,6 +23,11 @@ export declare class TLSDID {
      * @param {string} address - ethereum address of existing TLS DID Contract
      */
     connectToContract(address: string): Promise<void>;
+    private getDomain;
+    private getExpiry;
+    private getAttributes;
+    private getChains;
+    private getSignature;
     /**
      * Deploys TLS DID Contract
      */
