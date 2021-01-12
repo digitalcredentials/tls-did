@@ -30,7 +30,7 @@
   "dependencies": {
     "ethers": "^5.0.17",
     "save-dev": "^0.0.1-security",
-    "tls-did-registry": "github:tls-did-project/tls-did-registry#feature/KK-Delete",
+    "tls-did-registry": "github:tls-did-project/tls-did-registry#master",
     "tls-did-resolver": "github:tls-did-project/tls-did-resolver#development"
   }
 }
