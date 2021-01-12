@@ -254,4 +254,26 @@ export class TLSDID {
       throw new Error(`addChain unsuccesfull`);
     }
   }
+
+  /**
+   * Stores certs in the TLS DID Certificate Contract
+   * @dev Do not store root certificates, they are passed to the resolver
+   * @todo What to do when cert expire / are invalid
+   * @param certs
+   * @param {string} key - Signing tls key in pem format
+   */
+  async delete() {
+    const tx = await this.contract.remove(this.registry);
+    const receipt = await tx.wait();
+    if (receipt.status === 1) {
+      this.contract = null;
+      this.domain = null;
+      this.attributes = [];
+      this.expiry = null;
+      this.signature = null;
+      this.chains = [];
+    } else {
+      throw new Error(`delete unsuccesfull`);
+    }
+  }
 }

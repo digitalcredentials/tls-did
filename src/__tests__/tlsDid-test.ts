@@ -167,4 +167,16 @@ describe('TLSDID', () => {
       chain
     );
   });
+
+  it('should delete DID', async () => {
+    await tlsDid.delete();
+
+    expect(tlsDid.domain).toEqual(null);
+    expect(tlsDid.attributes).toEqual([]);
+    expect(tlsDid.expiry).toEqual(null);
+    expect(tlsDid.signature).toEqual(null);
+    expect(tlsDid.chains).toEqual([]);
+
+    await expect(tlsDid.connectToContract(address)).rejects.toThrow();
+  });
 });

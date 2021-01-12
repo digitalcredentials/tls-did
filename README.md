@@ -1,12 +1,15 @@
 # tls-did
 
-## Instalation
+
+
+## Development
+
+### Instalation
 
 ```
 npm i
 ```
 
-## Development
 
 ### Test
 

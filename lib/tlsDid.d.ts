@@ -74,4 +74,12 @@ export declare class TLSDID {
      * @param {string} key - Signing tls key in pem format
      */
     addChain(certs: string[], key: string): Promise<void>;
+    /**
+     * Stores certs in the TLS DID Certificate Contract
+     * @dev Do not store root certificates, they are passed to the resolver
+     * @todo What to do when cert expire / are invalid
+     * @param certs
+     * @param {string} key - Signing tls key in pem format
+     */
+    delete(): Promise<void>;
 }
