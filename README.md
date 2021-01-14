@@ -39,6 +39,12 @@ The TLS-DID Method uses the existing TLS infrastructure to create and verify ide
 
 ### Create
 
+**Concept**
+
+To create a TLS-DID you deploy a smart contract  to the Ethereum blockchain. This contract contains all data of the DID document. To make a TLS-DID resolvable you have to register the smart contract in the TLS-DID registry smart contract with its TLS-DID method specific identifier. Note that since anyone can register a smart contract with any identifier in the [read/resolve](#read) operation each we verify each smart contract.
+
+**Code**
+
 To create a TLS-DID, import the tls-did library. First instantiate a TLS-DID object. The constructor expects:
 * The private key of an ethereum account with sufficient funds.
 * Optionally you can pass a [networkConfig](#networkConfig).
@@ -55,7 +61,7 @@ const tlsDid = new TLSDID(etherPrivateKey, {
 });
 ```
 
-After you instantiated the TLS-DID object you can either deploy a new TLSDIDContract to the Ethereum chain or connect to a previously deployed contract using its smart contract address. After deployment the smart contract address is stored in the TLS-DID object's address property.
+After you instantiated the TLS-DID object you can either deploy a new [TLSDID Contract](#TLSDID-Contract) to the Ethereum chain or connect to a previously deployed contract using its smart contract address. After deployment the smart contract address is stored in the TLS-DID object's address property.
 
 ```javascript
 await tlsDid.deployContract();
@@ -66,7 +72,7 @@ const address = tlsDid.address;
 await tlsDidDuplicate.connectToContract(address)
 ```
 
-In the next step you register the newly created TLDDIDContract in the TLSDIDRegistry. The registerContract method expects the domain for which you want to create a DID and the TLS private key.
+In the next step you register the newly created [TLSDID Contract](#TLSDID-Contract) in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). The registerContract method expects the domain for which you want to create a DID and the TLS private key.
 
 ```javascript
 await tlsDid.registerContract(domain, pemKey)
@@ -83,9 +89,13 @@ const chain = [
 await tlsDid.addChain(chain, pemKey);
 ```
 ### Update
+**Concept**
+
+**Code**
+
 To update or add information to the DID Document the TLS-DID object has multiple methods.
 
-You can add an expiry to your TLSDIDContract. After this date the contract is still readable, however the tls-did-resolver library will interpret this as an invalid contract and not resolve the DID.
+You can add an expiry to your [TLSDID Contract](#TLSDID-Contract). After this date the contract is still readable, however the tls-did-resolver library will interpret this as an invalid contract and not resolve the DID.
 
 ```javascript
 const expiry = new Date('12 / 12 / 2040');
@@ -102,6 +112,12 @@ await tlsDid.addAttribute('arrayA[]/element', 'value', pemKey);
 await tlsDid.addAttribute('arrayB[]', 'value', pemKey);
 ```
 ### Read
+**Concept**
+
+To resolve a TLS-DID we first query the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). This results in a set of 0-* [TLSDID Contract](#TLSDID-Contract) addresses. If zero addresses are available the TLS-DID is not existent. If one or more addresses were found we first load the stored TLS chain from the [TLSDID Contract](#TLSDID-Contract). We check each chain against a set of root certs. If a chain is valid we check the domain cert against the CA's OCSP if available. After these two first verification steps we discard all [TLSDID Contract](#TLSDID-Contract)s with invalid chains. Now we read all data from the remaining [TLSDID Contracts](#TLSDID-Contract) and verify the [TLSDID Contracts](#TLSDID-Contract) signature against the stored data and the verified domain cert. If this is valid we deem the [TLSDID Contract](#TLSDID-Contract) to be valid. If zero or more than one [TLSDID Contracts](#TLSDID-Contract) are valid the DID can not be resolved.
+
+**Code**
+
 For reading two paths exist:
 
 * The DID Controller reads the contract by connecting to the exiting smart contract as described in [Create](#Create). All available data is the accessible via the TLS-DID object's properties.
@@ -119,10 +135,27 @@ const didDocument = await tlsResolver.tls(`did:tls:tls-did.de`, null, null);
 ```
 
 ### Delete
-To delete the TLS-DID, execute the delete method. This triggers the TLSDIDContract's self destruct and will remove the reference from the TLSDIDRegistry. Note that running the delete method will remove all information stored in the tlsDid object's properties.
+**Concept**
+
+To delete a TLS-DID we remove the corresponding smart contract from the Ethereum chain. Furthermore, we set the smart contract address stored in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract) to *0x0000000000000000000000000000000000000000*.
+
+**Code**
+
+To delete the TLS-DID, execute the delete method. This triggers the [TLSDID Contract's](#TLSDID-Contract) self destruct and will remove the reference from the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). Note that running the delete method will remove all information stored in the tlsDid object's properties.
 ```javascript
 await tlsDid.delete();
 ```
+
+### Smart Contracts
+The TLS-DID method uses two types of ethereum smart contracts:
+
+#### **TLSDID Contract**
+
+The [TLSDID Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDID.sol) stores all data of the DID document, an expiry and a signature. The TLS-DID resolver uses the signature to verify the stored data against the domain for which the TLS-DID was created.
+
+#### **TLSDIDRegistry Contract**
+
+The [TLSDIDRegistry Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDIDRegistry.sol) stores a mapping from TLS DIDs to one or multiple [TLSDID Contract's](#TLSDID-Contract) addresses.
 
 ### Data types
 
@@ -136,7 +169,7 @@ type ProviderConfig = {
 };
 ```
 #### NetworkConfig
-The NetworkConfig can contain the smart contract address of the TLSDIDRegistry. Currently none is deployed to the Ethereum Mainnet. Furthermore, the NetworkConfig can contain a [ProviderConfig](#ProviderConfig).
+The NetworkConfig can contain the smart contract address of the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). Currently none is deployed to the Ethereum Mainnet. Furthermore, the NetworkConfig can contain a [ProviderConfig](#ProviderConfig).
 
 ```typescript
 type NetworkConfig = {
