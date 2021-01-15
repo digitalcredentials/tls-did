@@ -150,20 +150,22 @@ To delete the TLS-DID, execute the delete method. This triggers the [TLSDID Cont
 await tlsDid.delete();
 ```
 
-### Smart Contracts
-The TLS-DID method uses two types of ethereum smart contracts:
+## Smart Contracts
+In this section we shortly describe the two ethereum smart contracts TLS-DID method uses.
 
-#### **TLSDID Contract**
+### TLSDID Contract
 
 The [TLSDID Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDID.sol) stores all data of the DID document, an expiry and a signature. The TLS-DID resolver uses the signature to verify the stored data against the domain for which the TLS-DID was created.
 
-#### **TLSDIDRegistry Contract**
+### TLSDIDRegistry Contract
 
 The [TLSDIDRegistry Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDIDRegistry.sol) stores a mapping from TLS DIDs to one or multiple [TLSDID Contract's](#TLSDID-Contract) addresses.
 
-### Data types
+## Data types
 
-#### ProviderConfig
+In this section we describe data types the implementation repeatedly makes use of.
+
+### ProviderConfig
 The ProviderConfig can contain either a [ethers](https://github.com/ethers-io/ethers.js#readme) provider, a json rpc url, or a [web3 provider](https://web3js.readthedocs.io/en/v1.2.11/web3.html#providers).
 ```typescript
 type ProviderConfig = {
@@ -172,7 +174,7 @@ type ProviderConfig = {
   web3?: any;
 };
 ```
-#### NetworkConfig
+### NetworkConfig
 The NetworkConfig can contain the smart contract address of the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). Currently none is deployed to the Ethereum Mainnet. Furthermore, the NetworkConfig can contain a [ProviderConfig](#ProviderConfig).
 
 ```typescript
