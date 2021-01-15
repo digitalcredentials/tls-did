@@ -27,21 +27,25 @@ The tls-did and the tls-did-resolver library allow to create, update, read and d
 
 ## TLS-DID Method
 
+
 [DID Method](https://www.w3.org/TR/did-core/#dfn-did-methods)
 
-The TLS-DID Method uses the existing TLS infrastructure to create and verify identities. With this methods DIDs linked to existing domains can be created.
+The TLS-DID method uses the existing TLS infrastructure to create and verify identities. With this method DIDs verifiably linked to existing domains can be created, if a TLS certificate was issued to the domain.
 
-*Method Name*: tls
+**Method Name**: tls
 
-*TLS-DID Format*: did:tls:\<domain>
+**TLS-DID Format**: did:tls:\<domain>
 
-*Example TLS-DID*: did:tls:tls-did.de
+**Example TLS-DID**: did:tls:tls-did.de
 
+## TLS-DID Operations
+
+In this section we describe the four operations each DID method has to specify. We segment the description of each operation into the concept and an explanation of how to use the tls-did and the tls-did-resolver library to run the operation.
 ### Create
 
 **Concept**
 
-To create a TLS-DID you deploy a smart contract  to the Ethereum blockchain. This contract contains all data of the DID document. To make a TLS-DID resolvable you have to register the smart contract in the TLS-DID registry smart contract with its TLS-DID method specific identifier. Note that since anyone can register a smart contract with any identifier in the [read/resolve](#read) operation each we verify each smart contract.
+To create a TLS-DID we deploy a smart contract containing all data of the DID document to the Ethereum blockchain. We register this contract in the TLS-DID registry smart contract with its TLS-DID method specific identifier. Note that we do not verify the correctness of an association between a TLS-DID and a domain on creation. Therefore, anyone can register a smart contract with any identifier. Thats why we verify each smart contract in the [read/resolve](#read) operation.
 
 **Code**
 
