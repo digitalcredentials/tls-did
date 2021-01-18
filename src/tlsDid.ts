@@ -5,9 +5,9 @@ import {
   providers,
   BigNumber,
 } from 'ethers';
-import { hashContract } from 'tls-did-resolver';
-import TLSDIDContract from 'tls-did-registry/build/contracts/TLSDID.json';
-import TLSDIDRegistryContract from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
+import { hashContract } from '@digitalcredentials/tls-did-resolver';
+import TLSDIDContract from '@digitalcredentials/tls-did-registry/build/contracts/TLSDID.json';
+import TLSDIDRegistryContract from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDRegistry.json';
 import { NetworkConfig, Attribute } from './types';
 import { sign, configureProvider, chainToCerts } from './utils';
 

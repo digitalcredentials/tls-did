@@ -1,6 +1,6 @@
 {
-  "name": "tls-did",
-  "version": "0.1.0",
+  "name": "@digitalcredentials/tls-did",
+  "version": "0.1.1",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
@@ -28,9 +28,9 @@
     "typescript": "^4.0.5"
   },
   "dependencies": {
+    "@digitalcredentials/tls-did-registry": "^0.1.1",
+    "@digitalcredentials/tls-did-resolver": "^0.1.1",
     "ethers": "^5.0.17",
-    "save-dev": "^0.0.1-security",
-    "tls-did-registry": "github:tls-did-project/tls-did-registry#master",
-    "tls-did-resolver": "github:tls-did-project/tls-did-resolver#development"
+    "save-dev": "^0.0.1-security"
   }
 }

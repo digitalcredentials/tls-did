@@ -1,6 +1,6 @@
-import { Contract, providers, BigNumber } from 'ethers';
+import { Contract, providers } from 'ethers';
 import { readFileSync } from 'fs';
-import TLSDIDRegistryContract from 'tls-did-registry/build/contracts/TLSDIDRegistry.json';
+import TLSDIDRegistryContract from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDRegistry.json';
 import { TLSDID } from '../index';
 import c from './testConfig.json';
 
