@@ -95,6 +95,12 @@ await tlsDid.addChain(chain, pemKey);
 ### Update
 **Concept**
 
+We store the DID documents data in the [TLSDID Contract](#TLSDID-Contract). You can store all data as long as it complies to the JSON data format. This means however, that you are responsible that the data that you add, adheres to the [DID document data model specification](https://www.w3.org/TR/did-core/#data-model).
+
+ Only the controller of the Ethereum account that created the [TLSDID Contract](#TLSDID-Contract) can update the contract and after each data update, the [TLSDID Contract's](#TLSDID-Contract) signature is updated using the TLS private key.
+
+As an extension to the standard DID standard we allow you to store an expiry date in the [TLSDID Contract](#TLSDID-Contract). The contract is invalid if the current date is later then the stored expiry date.
+
 **Code**
 
 To update or add information to the DID Document the TLS-DID object has multiple methods.
