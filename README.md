@@ -45,7 +45,7 @@ In this section we describe the four operations each DID method has to specify. 
 
 **Concept**
 
-To create a TLS-DID we deploy a smart contract containing all data of the DID document to the Ethereum blockchain. We register this contract in the TLS-DID registry smart contract with its TLS-DID method specific identifier. Note that we do not verify the correctness of an association between a TLS-DID and a domain on creation. Therefore, anyone can register a smart contract with any identifier. Thats why we verify each smart contract in the [read/resolve](#read) operation.
+To create a TLS-DID we deploy a smart contract to the Ethereum blockchain. We register this contract in the TLS-DID registry smart contract with its TLS-DID method specific identifier. **Note** that we do not verify the correctness of an association between a TLS-DID and a domain on creation. Therefore, anyone can register a smart contract with any identifier. Thats why we verify each smart contract in the [read/resolve](#read) operation.
 
 **Code**
 
