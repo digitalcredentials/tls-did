@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npx tsc",
     "test": "jest",
-    "reload": "rm -rf node_modules && rm package-lock.json && npm i"
+    "release": "np"
   },
   "repository": {
     "type": "git",
@@ -31,6 +31,7 @@
     "@digitalcredentials/tls-did-registry": "^0.1.1",
     "@digitalcredentials/tls-did-resolver": "^0.1.1",
     "ethers": "^5.0.17",
+    "np": "^7.2.0",
     "save-dev": "^0.0.1-security"
   }
 }

@@ -70,7 +70,7 @@ export class TLSDID {
     const attributeCountBN = await this.contract.getAttributeCount();
     const attributeCount = attributeCountBN.toNumber();
 
-    //Creates and waits for an array of promisses each containing an getAttribute call
+    //Creates and waits for an array of promises each containing an getAttribute call
     const attributes = await Promise.all(
       Array.from(Array(attributeCount).keys()).map((i) =>
         this.contract.getAttribute(i)
@@ -89,7 +89,7 @@ export class TLSDID {
     const chainCountBN = await this.contract.getChainCount();
     const chainCount = chainCountBN.toNumber();
 
-    //Creates and waits for an array of promisses each containing an getChain call
+    //Creates and waits for an array of promisees each containing an getChain call
     const chains = await Promise.all(
       Array.from(Array(chainCount).keys()).map((i) => this.contract.getChain(i))
     );
@@ -142,7 +142,7 @@ export class TLSDID {
     );
     const receipt = await tx.wait();
     if (receipt.status === 0) {
-      throw new Error('registerContract unsuccesfull');
+      throw new Error('registerContract unsuccessful');
     }
   }
 
@@ -156,7 +156,7 @@ export class TLSDID {
     if (receipt.status === 1) {
       this.domain = domain;
     } else {
-      throw new Error('setDomain unsuccesfull');
+      throw new Error('setDomain unsuccessful');
     }
   }
 
@@ -174,7 +174,7 @@ export class TLSDID {
       this.attributes.push({ path, value });
       await this.signContract(key);
     } else {
-      throw new Error('setAttribute unsuccesfull');
+      throw new Error('setAttribute unsuccessful');
     }
   }
 
@@ -192,7 +192,7 @@ export class TLSDID {
       this.expiry = date;
       await this.signContract(key);
     } else {
-      throw new Error('setExpiry unsuccesfull');
+      throw new Error('setExpiry unsuccessful');
     }
   }
 
@@ -221,7 +221,7 @@ export class TLSDID {
     if (receipt.status === 1) {
       this.signature = signature;
     } else {
-      throw new Error('setSignature unsuccesfull');
+      throw new Error('setSignature unsuccessful');
     }
   }
 
@@ -251,7 +251,7 @@ export class TLSDID {
       this.chains.push(certs);
       await this.signContract(key);
     } else {
-      throw new Error(`addChain unsuccesfull`);
+      throw new Error(`addChain unsuccessful`);
     }
   }
 
@@ -273,7 +273,7 @@ export class TLSDID {
       this.signature = null;
       this.chains = [];
     } else {
-      throw new Error(`delete unsuccesfull`);
+      throw new Error(`delete unsuccessful`);
     }
   }
 }
