@@ -110,7 +110,7 @@ As an extension to the DID document standard we allow you to store an expiry dat
 
 **Code**
 
-To update or add information to the DID Document the TLS-DID object has multiple methods.
+To update or add information to the DID document the TLS-DID object has multiple methods.
 
 You can add an expiry to your [TLSDID Contract](#TLSDID-Contract). After this date the contract is still readable, however the tls-did-resolver library will interpret this as an invalid contract and not resolve the DID.
 
@@ -121,14 +121,16 @@ const expiry = new Date('12 / 12 / 2040');
 await tlsDid.setExpiry(expiry, pemKey);
 ```
 
-You can add attributes to your DID Document with the addAttribute method.
+You can add attributes to your DID document with the addAttribute method. The addAttribute method
+expects a path and value. The path resembles XPath. The value can currently only be a string. The [read/resolve](#read) constructs the DID document from the path/value combinations.
+
 ```javascript
 //Adds {parent: {child: value}} to the DID document / TLSDIDContract
 await tlsDid.addAttribute('parent/child', 'value', pemKey);
 //Adds {array: [{element: value}]} to the DID document /TLSDIDContract
-await tlsDid.addAttribute('arrayA[]/element', 'value', pemKey);
+await tlsDid.addAttribute('arrayA[0]/element', 'value', pemKey);
 //Adds {array: [value]} to the DID document / TLSDIDContract
-await tlsDid.addAttribute('arrayB[]', 'value', pemKey);
+await tlsDid.addAttribute('arrayB[0]', 'value', pemKey);
 ```
 ### Read
 **Concept**
