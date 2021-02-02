@@ -1,18 +1,25 @@
-## TLS-DID Method
+# TLS-DID Method
 
 [DID Method](https://www.w3.org/TR/did-core/#dfn-did-methods)
 
 The TLS-DID method uses the existing TLS infrastructure to create and verify identities. With this method  you can create DIDs verifiably linked to existing domains using the domain's TLS key pair.
 
-**Method Name**: tls
+## TLS-DID Format
 
-**TLS-DID Format**: did:tls:\<domain>
+TLS-DIDs have the following format:
+```
+tls-did             = "did:tls:" tls-did-identifier
 
-**Example TLS-DID**: did:tls:tls-did.de
+tls-did-identifier  = Second-Level-Domain Top-Level-Domain
+```
 
+Example TLS-DID:
+```
+did:tls:tls-did.de
+```
 ## TLS-DID Operations
 
-In this section we describe the four operations each DID method has to specify.
+In this section we describe the four operations each DID method must specify.
 ### Create
 
 To create a TLS-DID we deploy a smart contract to the Ethereum blockchain. We register the contract in the TLS-DID registry smart contract with its TLS-DID method-specific identifier (a domain). **Note** that we do not verify the correctness of an association between a TLS-DID and a domain on creation. Therefore, anyone can register a smart contract with any identifier. Thats why we verify each smart contract in the [read/resolve](#read) operation.
@@ -34,7 +41,6 @@ To verify the validity of a [TLSDID Contract](#TLSDID-Contract), we first verify
 If exactly one valid [TLSDID Contract](#TLSDID-Contract) is found the requested DID document is constructed from the [TLSDID Contract's](#TLSDID-Contract) data.
 
 ### Delete
-**Concept**
 
 To delete a TLS-DID we remove the corresponding smart contract from the Ethereum chain. Furthermore, we set the smart contract address stored in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract) to *0x0000000000000000000000000000000000000000*.
 
