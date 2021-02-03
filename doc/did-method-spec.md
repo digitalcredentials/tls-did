@@ -2,7 +2,7 @@
 
 [DID Method](https://www.w3.org/TR/did-core/#dfn-did-methods)
 
-The TLS-DID method uses the existing TLS infrastructure to create and verify identities. With this method  you can create DIDs verifiably linked to existing domains using the domain's TLS key pair.
+The TLS-DID method uses the existing TLS infrastructure to create and verify identities on the Ethereum blockchain. With this method you can create DIDs verifiably linked to existing domains using the domain's TLS key pair.
 
 ## TLS-DID Format
 
@@ -20,15 +20,43 @@ did:tls:tls-did.de
 ## TLS-DID Operations
 
 In this section we describe the four operations each DID method must specify.
+
+**Note** that in the following mean the Second-Level-Domain and Top-Level-Domain when we use "domain".
 ### Create
 
-To create a TLS-DID we deploy a smart contract to the Ethereum blockchain. We register the contract in the TLS-DID registry smart contract with its TLS-DID method-specific identifier (a domain). **Note** that we do not verify the correctness of an association between a TLS-DID and a domain on creation. Therefore, anyone can register a smart contract with any identifier. Thats why we verify each smart contract in the [read/resolve](#read) operation.
+To create a TLS-DID we deploy a TLS-DID smart contract linked to a domain using the domain's TLS key pair to the Ethereum blockchain and register the contract in the TLS-DID registry smart contract with its TLS-DID method-specific identifier (domain).
+
+Prerequisites:
+
+- TLS key pair (TLS certificate & TLS encryption key) issued by trusted Certificate Authority
+- TLS certificate chain without root certificate
+- Ethereum account with sufficient funds
+
+Creating the initial tls-did:
+
+1. Deploy TLS-DID smart contract
+2. Store the domain in TLS-DID smart contract
+3. Store the TLS certificate chain in TLS-DID smart contract
+3. Store a signature(hash(TLS-DID smart contract's address, domain, TLS certificate chain)) in the TLS-DID smart contract.
+4. Store the domain and the TLS-DID smart contract address in the TLS-DID registry smart contract
+
+**Note** that we do not verify the correctness of the link between a TLS-DID and a domain on creation. Therefore, anyone can register a smart contract with any identifier. We verify the link in the [read/resolve](#read) operation.
 
 ### Update
 
 We store the DID documents data in the [TLSDID Contract](#TLSDID-Contract). We store data as a combination of path and value. Currently we only support string values. Furthermore, we do not check the data, this means, that you are responsible that the data you add, adheres to the [DID document data model specification](https://www.w3.org/TR/did-core/#data-model).
 
- Only the controller of the Ethereum account that created the [TLSDID Contract](#TLSDID-Contract) can update the contract and after each data update, the [TLSDID Contract's](#TLSDID-Contract) signature is updated using the TLS private key.
+Only the controller of the Ethereum account that created the [TLSDID Contract](#TLSDID-Contract) can update the contract and after each data update, the [TLSDID Contract's](#TLSDID-Contract) signature is updated using the TLS private key.
+
+Prerequisites:
+
+- TLS encryption key
+- Ethereum account with sufficient funds that created the [TLSDID Contract](#TLSDID-Contract)
+
+Updating the DID document:
+
+1. Store path-value pair in TLS-DID smart contract
+2. Overwrite the signature(hash(TLS-DID smart contract's address, domain, TLS certificate chain, path-value pairs)) in the TLS-DID smart contract
 
 As an extension to the DID document standard we allow you to store an expiry date in the [TLSDID Contract](#TLSDID-Contract). The [read/resolve](#read) operation interprets the [TLSDID Contract](#TLSDID-Contract) to be invalid and does not resolve the DID if the current date is later then the stored expiry date.
 
@@ -42,9 +70,13 @@ If exactly one valid [TLSDID Contract](#TLSDID-Contract) is found the requested 
 
 ### Delete
 
-To delete a TLS-DID we remove the corresponding smart contract from the Ethereum chain. Furthermore, we set the smart contract address stored in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract) to *0x0000000000000000000000000000000000000000*.
+To delete a TLS-DID we remove the corresponding smart contract from the Ethereum blockchain. Furthermore, we set the smart contract address stored in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract) to *0x0000000000000000000000000000000000000000*.
 
 # Security Considerations
+
+Have to be kept secret:
+- TLS encryption key
+- Ethereum private key
 
 ## Eavesdropping
 
@@ -59,6 +91,10 @@ To delete a TLS-DID we remove the corresponding smart contract from the Ethereum
 ## Man-in-the-Middle
 
 ## Denial of Service
+
+## Residual Risks
+
+risks from compromise in a related protocol, incorrect implementation, or cipher
 
 # Privacy Considerations
 
