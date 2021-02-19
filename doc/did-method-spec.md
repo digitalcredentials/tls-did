@@ -1,8 +1,6 @@
 # TLS-DID Method
 
-[DID Method](https://www.w3.org/TR/did-core/#dfn-did-methods)
-
-The TLS-DID method uses the existing TLS infrastructure to create and verify identities on the Ethereum blockchain. With this method you can create DIDs verifiably linked to existing domains using the domain's TLS key pair.
+The TLS-DID method is a [DID Method](https://www.w3.org/TR/did-core/#dfn-did-methods) that makes use the internet's existing [Transport Layer Security (TLS)](https://en.wikipedia.org/wiki/Transport_Layer_Security) infrastructure. The TLS-DID method allows you to create and verify DIDs on the Ethereum blockchain verifiably linked to an existing domain. The link between a DID and a domain is created using of the domain's TLS key pair.
 
 ## TLS-DID Format
 
@@ -21,7 +19,7 @@ did:tls:tls-did.de
 
 In this section we describe the four operations each DID method must specify.
 
-**Note** that in the following mean the Second-Level-Domain and Top-Level-Domain when we use "domain".
+**Note** that in the following we mean the Second-Level-Domain and Top-Level-Domain when we use "domain".
 ### Create
 
 To create a TLS-DID we deploy a TLS-DID smart contract linked to a domain using the domain's TLS key pair to the Ethereum blockchain and register the contract in the TLS-DID registry smart contract with its TLS-DID method-specific identifier (domain).
@@ -58,11 +56,11 @@ Updating the DID document:
 1. Store path-value pair in TLS-DID smart contract
 2. Overwrite the signature(hash(TLS-DID smart contract's address, domain, TLS certificate chain, path-value pairs)) in the TLS-DID smart contract
 
-As an extension to the DID document standard we allow you to store an expiry date in the [TLSDID Contract](#TLSDID-Contract). The [read/resolve](#read) operation interprets the [TLSDID Contract](#TLSDID-Contract) to be invalid and does not resolve the DID if the current date is later then the stored expiry date.
+As an extension to the DID document standard we allow you to store an expiry date in the [TLSDID Contract](#TLSDID-Contract). The [read/resolve](#read) operation interprets the [TLSDID Contract](#TLSDID-Contract) to be valid only if the expiry date is in the future.
 
 ### Read
 
-To resolve a TLS-DID we first query the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). This results in a set of 0-* [TLSDID Contract](#TLSDID-Contract) addresses. If zero addresses are found, the TLS-DID does not resolve. If one address is found we verify the correctness of the [TLSDID Contract's](#TLSDID-Contract) data. If more the one addresses is found, we verify the correctness of the contained data of each [TLSDID Contract](#TLSDID-Contract). In the case of multiple addresses, the DID only resolves if exactly one [TLSDID Contract](#TLSDID-Contract) is valid.
+To resolve a TLS-DID we first query the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). This results in a set of 0-* [TLSDID Contract](#TLSDID-Contract) addresses. If zero addresses are found, the TLS-DID does not resolve. If one address is found we verify the correctness of the [TLSDID Contract's](#TLSDID-Contract) data. If more than one addresses is found, we verify the correctness of the contained data of each [TLSDID Contract](#TLSDID-Contract). In the case of multiple addresses, the DID only resolves if exactly one [TLSDID Contract](#TLSDID-Contract) is valid.
 
 To verify the validity of a [TLSDID Contract](#TLSDID-Contract), we first verify that its expiration date is in the future. Then we load the stored TLS chain and check it against a set of trusted root certs. If the chain is valid, we check the domain cert against the issuing CA's OCSP if available. In the final step, we read the DID document data from the [TLSDID Contract](#TLSDID-Contract) and verify the [TLSDID Contracts](#TLSDID-Contract) signature against the stored data and the verified domain cert. If the signature is valid we deem the [TLSDID Contract](#TLSDID-Contract) to be valid.
 
