@@ -1,6 +1,6 @@
 # Documentation
 
-The [tls-did](https://github.com/digitalcredentials/tls-did) and the [tls-did-resolver](https://github.com/digitalcredentials/tls-did) library allow to create, update, read and delete [Decentralized Identifiers](https://www.w3.org/TR/did-core/) (DIDs). Both libraries support JavaScript and TypeScript. The [tls-did-playground](https://github.com/digitalcredentials/tls-did-playground) shows an exemplary usage; how to create, update, resolve/read and delete TLS-DIDs.
+The [tls-did](https://github.com/digitalcredentials/tls-did) and the [tls-did-resolver](https://github.com/digitalcredentials/tls-did) library allow to create, update, read and delete TLS-[Decentralized Identifiers](https://www.w3.org/TR/did-core/) (DIDs). Both libraries support JavaScript and TypeScript. The [tls-did-playground](https://github.com/digitalcredentials/tls-did-playground) shows an exemplary usage; how to create, update, resolve/read and delete TLS-DIDs.
 
 ## TLS-DID Operations
 
