@@ -4,7 +4,7 @@ The [tls-did](https://github.com/digitalcredentials/tls-did) and the [tls-did-re
 
 ## TLS-DID Operations
 
-In this section we describe to use the [tls-did](https://github.com/digitalcredentials/tls-did) and the [tls-did-resolver](https://github.com/digitalcredentials/tls-did) library to run the four DID method operations.
+In this section we describe how to use the [tls-did](https://github.com/digitalcredentials/tls-did) and the [tls-did-resolver](https://github.com/digitalcredentials/tls-did) library to run the four DID method operations.
 
 ### Create
 
