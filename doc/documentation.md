@@ -123,7 +123,7 @@ The [TLSDID Contract](https://github.com/digitalcredentials/tls-did-registry/blo
 
 ### TLSDIDRegistry Contract
 
-The [TLSDIDRegistry Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDIDRegistry.sol) stores a mapping from TLS DIDs to one or multiple [TLSDID Contract's](#TLSDID-Contract) addresses.
+The [TLSDIDRegistry Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDIDRegistry.sol) stores a mapping from TLS-DID method specific identifiers (domains) to one or multiple [TLSDID Contract's](#TLSDID-Contract) addresses.
 
 ## Data Types
 
