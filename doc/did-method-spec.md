@@ -2,6 +2,35 @@
 
 The TLS-DID method is a [DID Method](https://www.w3.org/TR/did-core/#dfn-did-methods) that makes use the internet's existing [Transport Layer Security (TLS)](https://en.wikipedia.org/wiki/Transport_Layer_Security) infrastructure. The TLS-DID method allows you to create and verify DIDs on the Ethereum blockchain verifiably linked to an existing domain. The link between a DID and a domain is created using of the domain's TLS key pair.
 
+- [TLS-DID Method](#tls-did-method)
+  - [TLS-DID Format](#tls-did-format)
+  - [TLS-DID Operations](#tls-did-operations)
+    - [Create](#create)
+    - [Update](#update)
+    - [Read](#read)
+    - [Delete](#delete)
+- [Security Considerations](#security-considerations)
+  - [Eavesdropping](#eavesdropping)
+  - [Replay](#replay)
+  - [Message Insertion](#message-insertion)
+  - [Deletion](#deletion)
+  - [Modification](#modification)
+  - [Man-in-the-Middle](#man-in-the-middle)
+  - [Denial of Service](#denial-of-service)
+  - [Residual Risks](#residual-risks)
+- [Privacy Considerations](#privacy-considerations)
+  - [Surveillance](#surveillance)
+  - [Stored Data Compromise](#stored-data-compromise)
+  - [Unsolicited Traffic](#unsolicited-traffic)
+  - [Misattribution](#misattribution)
+  - [Correlation](#correlation)
+  - [Identification](#identification)
+  - [Secondary Use](#secondary-use)
+  - [Disclosure](#disclosure)
+  - [Exclusion](#exclusion)
+
+- [Privacy Considerations](#privacy-considerations)
+
 ## TLS-DID Format
 
 TLS-DIDs have the following format:

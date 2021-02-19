@@ -1,3 +1,10 @@
+# Documentation
+
+The [tls-did](https://github.com/digitalcredentials/tls-did) and the [tls-did-resolver](https://github.com/digitalcredentials/tls-did) library [documentation](https://github.com/digitalcredentials/tls-did/tree/master/doc/documentation.md).
+# TLS-DID Method Specification
+
+The TLS-DID method [specification](https://github.com/digitalcredentials/tls-did/tree/master/doc/did-method-spec.md).
+
 # Development
 
 ## Use
@@ -23,11 +30,3 @@ npm run test
 ```
 npm run build
 ```
-
-# Documentation
-
-
-The [tls-did](https://github.com/digitalcredentials/tls-did) and the [tls-did-resolver](https://github.com/digitalcredentials/tls-did) library [documentation](https://github.com/digitalcredentials/tls-did/tree/master/doc/documentation.md).
-# TLS-DID Method
-
-The TLS-DID method [specification](https://github.com/digitalcredentials/tls-did/tree/master/doc/did-method-spec.md).
