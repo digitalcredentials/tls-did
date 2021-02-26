@@ -120,6 +120,8 @@ const resolver = new Resolver({
 const didDocument = await resolver.resolve('did:tls:tls-did.de');
 ```
 
+Currently the TLS-DID libraries do not allow to resolve paths/fragments of the DID Document (https://github.com/digitalcredentials/tls-did/issues/28).
+
 ### Delete
 
 To delete the TLS-DID, execute the TLSDID's delete method. This triggers the [TLSDID Contract's](#TLSDID-Contract) self destruct mechanism and will replace the reference to the [TLSDID Contract](#TLSDID-Contract) in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract) with *0x0000000000000000000000000000000000000000*. *Note* that running the delete method will remove all information stored in the TLSDID object's properties.

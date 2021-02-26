@@ -97,6 +97,8 @@ To verify the validity of a [TLSDID Contract](#TLSDID-Contract), we first verify
 
 If exactly one valid [TLSDID Contract](#TLSDID-Contract) is found the requested DID document is constructed from the [TLSDID Contract's](#TLSDID-Contract) data.
 
+Currently the TLS-DID libraries do not allow to resolve paths/fragments of the DID Document (https://github.com/digitalcredentials/tls-did/issues/28).
+
 ### Delete
 
 To delete a TLS-DID we remove the corresponding smart contract from the Ethereum blockchain. Furthermore, we set the smart contract address stored in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract) to *0x0000000000000000000000000000000000000000*.
