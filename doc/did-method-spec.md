@@ -10,6 +10,8 @@ The TLS-DID method is a [DID Method](https://www.w3.org/TR/did-core/#dfn-did-met
     - [Read](#read)
     - [Delete](#delete)
 - [Security Considerations](#security-considerations)
+  - [Third Party Risks:](#third-party-risks)
+  - [Downgrade](#downgrade)
   - [Eavesdropping](#eavesdropping)
   - [Replay](#replay)
   - [Message Insertion](#message-insertion)
@@ -105,6 +107,22 @@ Have to be kept secret:
 - TLS encryption key
 - Ethereum private key
 
+## Third Party Risks:
+- Certificate Authority compromise: If a Certificate Authority is compromised an attacker might:
+  1. invalidate a current TLS certificate private key pair, if recorded in OCSP the TLS-DID does not resolve.
+  2. create a new TLS key pair allowing the attacker to create a TLS-DID in the attacker's control.
+
+- TLS key pair compromise: If an attacker gains control over a currently used TLS key pair, the attacker can create a new TLS-DID contract for a domain. If two contracts for the same domain exist the TLS-DID does not resolve.
+
+- Ethereum key pair compromise: If an attacker gains control over an ethereum key pair used to create a TLS-DID contract the attacker can:
+  1. upload invalid data to the TLS-DID contract. The TLS-DID does not resolve.
+  2. delete the TLS-DID contract. The TLS-DID does not resolve.
+
+A possible mitigation for these security risks would be to monitor changes to a TLS-DID contract and the creation of possibly competing TLS-DID contracts. Competing smart contracts contain the TLS-DID's domain.
+## Downgrade
+
+- Andere DID Methode: Uli's Paper
+
 ## Eavesdropping
 
 ## Replay
@@ -119,17 +137,28 @@ Have to be kept secret:
 
 ## Denial of Service
 
+TODO: Distributed Denial of Service: Viele Smart Contracts falsch, performance?
+Kosten
+
 ## Residual Risks
 
 risks from compromise in a related protocol, incorrect implementation, or cipher
+cross protocol attacks: no attack vectors
 
 # Privacy Considerations
 
 ## Surveillance
 
+- The TLS-DID Method relies on the ethereum blockchain which can be tracked. The create, update and delete operation can be tracked. However, we develop the TLS-DID method to be used by institutions for interaction with the public.
+
+- Certificate authorities might track request to their OCSP service and thereby
+track who and how often a TLS-DID is resolved.
+
 ## Stored Data Compromise
 
 ## Unsolicited Traffic
+
+
 
 ## Misattribution
 
