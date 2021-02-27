@@ -168,7 +168,6 @@ export class TLSDID {
    */
   async addAttribute(path: string, value: string, key: string): Promise<void> {
     const tx = await this.contract.addAttribute(path, value);
-    await tx.wait();
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.attributes.push({ path, value });
@@ -186,7 +185,6 @@ export class TLSDID {
   async setExpiry(date: Date, key: string): Promise<void> {
     const expiry = date.getTime();
     const tx = await this.contract.setExpiry(expiry);
-    await tx.wait();
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.expiry = date;
