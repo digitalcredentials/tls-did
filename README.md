@@ -12,6 +12,8 @@ The TLS-DID method [specification](https://github.com/digitalcredentials/tls-did
 npm i @digitalcredentials/tls-did
 ```
 ## Collaborate
+
+[Project Board / Issues](https://github.com/digitalcredentials/tls-did/projects/1)
 ### Installation
 
 ```

@@ -28,7 +28,7 @@ export class TLSDID {
   /**
    * //TODO Allow for general provider type, see ethr-did implementation
    * Creates an instance of tlsdid.
-   * @param {string} ethereumPrivateKey - ethereum private key with enougth
+   * @param {string} ethereumPrivateKey - ethereum private key with enough
    * funds to pay for transactions
    * @param {string} [registry] - ethereum address of TLS DID Contract Registry
    * @param {IProviderConfig} providerConfig - config for ethereum provider {}
