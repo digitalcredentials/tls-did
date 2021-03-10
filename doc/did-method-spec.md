@@ -122,10 +122,9 @@ Have to be kept secret:
 A possible mitigation for these security risks would be to monitor changes to a TLS-DID contract and the creation of possibly competing TLS-DID contracts. Competing smart contracts contain the TLS-DID's domain.
 ## Downgrade
 
-- Andere DID Methode: Uli's Paper
 
 ## Eavesdropping
-- No private information should be stored on the TLS-DID registry and TLS-DID contracts, thus no private information should be transmitted.
+No private information should be stored on the TLS-DID registry and TLS-DID contracts, thus no private information should be transmitted.
 
 ## Replay
 
@@ -171,7 +170,7 @@ track who and how often a TLS-DID is resolved.
 
 ## Stored Data Compromise
 
-- The information stored in the TLS-DID registry and TLS-DID contracts is publicly readable, therefore no private information should be stored on them.
+The information stored in the TLS-DID registry and TLS-DID contracts is publicly readable, therefore no private information should be stored on them.
 
 ## Unsolicited Traffic
 
