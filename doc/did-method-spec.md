@@ -14,7 +14,6 @@ The TLS-DID method is a [DID Method](https://www.w3.org/TR/did-core/#dfn-did-met
   - [Downgrade](#downgrade)
   - [Eavesdropping](#eavesdropping)
   - [Replay](#replay)
-  - [Message Insertion](#message-insertion)
   - [Deletion](#deletion)
   - [Modification](#modification)
   - [Man-in-the-Middle](#man-in-the-middle)
@@ -126,26 +125,40 @@ A possible mitigation for these security risks would be to monitor changes to a 
 - Andere DID Methode: Uli's Paper
 
 ## Eavesdropping
+- No private information should be stored on the TLS-DID registry and TLS-DID contracts, thus no private information should be transmitted.
 
 ## Replay
 
-## Message Insertion
+If an attacker delays an signature update the TLS-DID, the contract does not resolve in the meantime.
 
+If an attacker delays a signature update after a change of the TLS-DID contract and a seconde signature update, the TLS-DID contract does not resolve due to an now invalid signature.
 ## Deletion
 
+See **Third Party Risks**.
 ## Modification
 
+See **Third Party Risks**.
 ## Man-in-the-Middle
+
+Communication with the ethereum mainnet:An attacker could alter the data read from chain.
+
+Communication with CA: An attacker could pretend that an invalid certificate is valid.
 
 ## Denial of Service
 
-TODO: Distributed Denial of Service: Viele Smart Contracts falsch, performance?
-Kosten
+To slow down the resolve-time of a TLS-DID, an attacker might upload a number of invalid TLS-DID contracts linked in the TLS-DID registry to the same domain as a victim's TLS-DID contract.
+In the worst case only the signature of the attacker's TLS-DID contracts is invalid; the tls-did-resolver has to read all data from the TLS-DID contracts prior to the final signature validity check.
+The time to resolve one to multiple TLS-DID contracts scales linearly.
+
+In a benchmark run with a local testnet the resolve-time of:
+ - one TLS-DID contract was approximately 600ms.
+ - 100 TLS-DID contracts was approximately 57960ms.
+
+The mitigation to this attack, is the cost of deployment of a TLS-DID contract to the ethereum mainnet.
 
 ## Residual Risks
 
-risks from compromise in a related protocol, incorrect implementation, or cipher
-cross protocol attacks: no attack vectors
+If node-forge's certificate chain verification or node's signature verification are compromised, a vulnerability might be introduced to the verification of TLS-DID contract signatures.
 
 # Privacy Considerations
 
@@ -158,9 +171,9 @@ track who and how often a TLS-DID is resolved.
 
 ## Stored Data Compromise
 
+- The information stored in the TLS-DID registry and TLS-DID contracts is publicly readable, therefore no private information should be stored on them.
+
 ## Unsolicited Traffic
-
-
 
 ## Misattribution
 
