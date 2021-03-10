@@ -50,14 +50,14 @@ const address = tlsDid.address;
 await tlsDid.connectToContract(address)
 ```
 
-In the next step you register the newly created [TLSDID Contract](#TLSDID-Contract) in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). The registerContract method expects the method specific identifier, a domain, and the domain's TLS private key.
+In the next step you register the newly created [TLSDID Contract](#TLSDID-Contract) in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). The registerContract method expects the method specific identifier, a Fully-Qualified Domain Names (FQDN) and the FQDN's TLS private key.
 
 ```javascript
 //Register TLSDIDContract in the TLSDIDRegistry
 await tlsDid.registerContract(domain, pemKey)
 ```
 
-In the final step you store the domain's TLS cert chain up to, **but not including the TLS root certificate**. You pass the cert chain as an array of pem encoded certs and the TLS private key to the addChain method. **Note** that the domain's certificate has to be the first element of the array and all intermediate certs should follow in their logical order.
+In the final step you store the FQDN's TLS cert chain up to, **but not including the TLS root certificate**. You pass the cert chain as an array of pem encoded certs and the TLS private key to the addChain method. **Note** that the FQDN's certificate has to be the first element of the array and all intermediate certs should follow in their logical order.
 
 ```javascript
 //Exemplary cert chain
@@ -134,11 +134,11 @@ In this section we shortly describe the two ethereum smart contracts the TLS-DID
 
 ### TLSDID Contract
 
-The [TLSDID Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDID.sol) stores the certificate chain, all data of the DID document, an expiry and a signature. The TLS-DID resolver uses the signature to verify all data stored in the contract against the TLS certificate of the domain for which the TLS-DID was created.
+The [TLSDID Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDID.sol) stores the certificate chain, all data of the DID document, an expiry and a signature. The TLS-DID resolver uses the signature to verify all data stored in the contract against the TLS certificate of the FQDN for which the TLS-DID was created.
 
 ### TLSDIDRegistry Contract
 
-The [TLSDIDRegistry Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDIDRegistry.sol) stores a mapping from TLS-DID method specific identifiers (domains) to one or multiple [TLSDID Contract's](#TLSDID-Contract) addresses.
+The [TLSDIDRegistry Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDIDRegistry.sol) stores a mapping from TLS-DID method specific identifiers (FQDN) to one or multiple [TLSDID Contract's](#TLSDID-Contract) addresses.
 
 ## Data Types
 
