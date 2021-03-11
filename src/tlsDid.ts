@@ -4,10 +4,12 @@ import {
   ContractFactory,
   providers,
   BigNumber,
+  EventFilter,
 } from 'ethers';
 import { hashContract } from '@digitalcredentials/tls-did-resolver';
 import TLSDIDContract from '@digitalcredentials/tls-did-registry/build/contracts/TLSDID.json';
 import TLSDIDRegistryContract from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDRegistry.json';
+import TLSDIDEVRegistryContract from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDEVRegistry.json';
 import { NetworkConfig, Attribute } from './types';
 import { sign, configureProvider, chainToCerts } from './utils';
 
@@ -55,6 +57,31 @@ export class TLSDID {
       this.getChains(),
       this.getSignature(),
     ]);
+  }
+
+  public async getEvents(domain) {
+    const filter: EventFilter = {
+      address: this.registry,
+      topics: [domain],
+    };
+
+    const evRegistryAddress = '0xBc03e14246aeBBBc77FfceE843D25E57078E8249';
+
+    const evRegistry = new Contract(
+      evRegistryAddress,
+      TLSDIDEVRegistryContract.abi,
+      this.provider
+    );
+
+    return await evRegistry.owned(
+      '0x4eb43c1903bc03375e71b7b159776a5b14103b81',
+      domain
+    );
+    // evRegistry.evRegistry.queryFilter(filter, this.wallet.address);
+    // evRegistry.evRegistry.queryFilter(
+    //   filter,
+    //   '0x4eb43c1903bc03375e71b7b159776a5b14103b81'
+    // );
   }
 
   private async getDomain() {
