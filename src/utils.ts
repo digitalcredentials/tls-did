@@ -1,4 +1,3 @@
-import { createSign } from 'crypto';
 import { providers } from 'ethers';
 import { ProviderConfig } from './types';
 
@@ -9,19 +8,6 @@ import { ProviderConfig } from './types';
  */
 export function chainToCerts(chain: string): string[] {
   return chain.split(/\n(?=-----BEGIN CERTIFICATE-----)/g);
-}
-
-/**
- * Signs data with pem private key
- * @param {string} key - Signing key in pem format
- * @param {string} data
- */
-export function sign(key: string, data: string): string {
-  const signer = createSign('sha256');
-  signer.update(data);
-  signer.end();
-  const signature = signer.sign(key).toString('base64');
-  return signature;
 }
 
 /**

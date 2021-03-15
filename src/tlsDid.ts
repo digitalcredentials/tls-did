@@ -1,31 +1,29 @@
 import {
   Wallet,
   Contract,
-  ContractFactory,
+  Event,
   providers,
   BigNumber,
   EventFilter,
 } from 'ethers';
-import { hashContract } from '@digitalcredentials/tls-did-resolver';
-import TLSDIDContract from '@digitalcredentials/tls-did-registry/build/contracts/TLSDID.json';
-import TLSDIDRegistryContract from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDRegistry.json';
-import TLSDIDEVRegistryContract from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDEVRegistry.json';
+import { hexZeroPad, Interface } from 'ethers/lib/utils';
+import TLSDIDRegistry from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDRegistry.json';
 import { NetworkConfig, Attribute } from './types';
-import { sign, configureProvider, chainToCerts } from './utils';
+import { configureProvider, chainToCerts } from './utils';
+import { sign, hashContract } from '@digitalcredentials/tls-did-utils';
 
 //TODO import from tls-did-registry or tls-did-resolver
 const REGISTRY = '0xaF9BA0dFa7D79eA2d1cFD28996dEf081c29dA51e';
 
 export class TLSDID {
-  private registry: string;
   private provider: providers.Provider;
   private wallet: Wallet;
-  private contract: Contract;
+  private registry: Contract;
   domain: string;
   attributes: Attribute[] = [];
   expiry: Date;
   signature: string;
-  chains: string[][] = [];
+  chain: string[];
 
   /**
    * //TODO Allow for general provider type, see ethr-did implementation
@@ -35,157 +33,158 @@ export class TLSDID {
    * @param {string} [registry] - ethereum address of TLS DID Contract Registry
    * @param {IProviderConfig} providerConfig - config for ethereum provider {}
    */
-  constructor(ethereumPrivateKey: string, networkConfig: NetworkConfig = {}) {
-    this.registry = networkConfig.registry ? networkConfig.registry : REGISTRY;
+  constructor(
+    domain,
+    ethereumPrivateKey: string,
+    networkConfig: NetworkConfig = {}
+  ) {
+    this.domain = domain;
     this.provider = configureProvider(networkConfig.providerConfig);
     this.wallet = new Wallet(ethereumPrivateKey, this.provider);
+
+    //Create registry contract object and connect wallet
+    const registry = new Contract(
+      networkConfig.registry ? networkConfig.registry : REGISTRY,
+      TLSDIDRegistry.abi,
+      this.provider
+    );
+    this.registry = registry.connect(this.wallet);
   }
 
   /**
    * Connects to existing TLS DID contract
    * @param {string} address - ethereum address of existing TLS DID Contract
    */
-  async connectToContract(address: string): Promise<void> {
-    //Create contract object and connect to contract
-    const contract = new Contract(address, TLSDIDContract.abi, this.provider);
-    this.contract = contract.connect(this.wallet);
-
-    await Promise.all([
-      this.getDomain(),
-      this.getExpiry(),
-      this.getAttributes(),
-      this.getChains(),
-      this.getSignature(),
-    ]);
+  async loadDataFromRegistry(address: string): Promise<void> {
+    // await Promise.all([
+    //   this.getExpiry(),
+    //   this.getAttributes(),
+    //   this.getChains(),
+    //   this.getSignature(),
+    // ]);
   }
 
-  public async getEvents(domain) {
-    const filter: EventFilter = {
-      address: this.registry,
-      topics: [domain],
-    };
+  public async getEvents() {
+    const lastChangeBlockBN = await this.registry.owned(
+      this.wallet.address,
+      this.domain
+    );
+    const lastChangeBlock = lastChangeBlockBN.toNumber();
+    if (lastChangeBlock === 0) {
+      console.log('No previous changes found for this domain');
+      return;
+    }
 
-    const evRegistryAddress = '0xBc03e14246aeBBBc77FfceE843D25E57078E8249';
-
-    const evRegistry = new Contract(
-      evRegistryAddress,
-      TLSDIDEVRegistryContract.abi,
-      this.provider
+    let filters = [
+      this.registry.filters.ExpiryChanged(),
+      this.registry.filters.SignatureChanged(),
+      this.registry.filters.AttributeChanged(),
+      this.registry.filters.ChainChanged(),
+    ];
+    filters.forEach((filter) =>
+      filter.topics.push(hexZeroPad(this.wallet.address, 32))
     );
 
-    return await evRegistry.owned(
-      '0x4eb43c1903bc03375e71b7b159776a5b14103b81',
-      domain
-    );
-    // evRegistry.evRegistry.queryFilter(filter, this.wallet.address);
-    // evRegistry.evRegistry.queryFilter(
-    //   filter,
-    //   '0x4eb43c1903bc03375e71b7b159776a5b14103b81'
-    // );
+    await this.queryChain(filters, lastChangeBlock);
   }
 
-  private async getDomain() {
-    this.domain = await this.contract.domain();
-  }
+  private async queryChain(
+    filters: EventFilter[],
+    block: number
+  ): Promise<Event[]> {
+    //TODO This could be more efficient, ethers however only correctly decodes events if event type is present in event filter
+    //The block with the last change is search for all types of changed events
+    let events = await this.queryBlock(filters, block);
+    if (events.length === 0) {
+      throw new Error(`No event found in block: ${block}`);
+    }
 
-  private async getExpiry() {
-    const expiryBN: BigNumber = await this.contract.expiry();
-    this.expiry = new Date(expiryBN.toNumber());
-  }
+    events.forEach((event) => {
+      switch (true) {
+        case event.event == 'AttributeChanged':
+          const path = event.args.path;
+          const value = event.args.value;
+          this.attributes.push({ path, value });
+          break;
 
-  private async getAttributes() {
-    const attributeCountBN = await this.contract.getAttributeCount();
-    const attributeCount = attributeCountBN.toNumber();
+        case event.event == 'ExpiryChanged' && this.expiry == null:
+          const expiry = event.args.expiry.toNumber();
+          this.expiry = new Date(expiry);
+          break;
 
-    //Creates and waits for an array of promises each containing an getAttribute call
-    const attributes = await Promise.all(
-      Array.from(Array(attributeCount).keys()).map((i) =>
-        this.contract.getAttribute(i)
-      )
-    );
+        case event.event == 'SignatureChanged' && this.signature == null:
+          this.signature = event.args.signature;
+          break;
 
-    //Transforms array representation of attributes to object representation
-    attributes.forEach((attribute) => {
-      const path = attribute['0'];
-      const value = attribute['1'];
-      this.attributes.push({ path, value });
+        case event.event == 'ChainChanged' && this.chain == null:
+          this.chain = chainToCerts(event.args.chain);
+          break;
+      }
     });
-  }
 
-  private async getChains() {
-    const chainCountBN = await this.contract.getChainCount();
-    const chainCount = chainCountBN.toNumber();
-
-    //Creates and waits for an array of promisees each containing an getChain call
-    const chains = await Promise.all(
-      Array.from(Array(chainCount).keys()).map((i) => this.contract.getChain(i))
-    );
-
-    //Splits concatenated cert string to array of certs
-    this.chains = chains.map((chain) => chainToCerts(chain));
-  }
-
-  private async getSignature() {
-    this.signature = await this.contract.signature();
-  }
-
-  /**
-   * Deploys TLS DID Contract
-   */
-  async deployContract(): Promise<void> {
-    const factory = new ContractFactory(
-      TLSDIDContract.abi,
-      TLSDIDContract.bytecode,
-      this.wallet
-    );
-    this.contract = await factory.deploy();
-    await this.contract.deployed();
-  }
-
-  /**
-   * Registers TLS DID Contract with TLS DID Registry
-   * @param {string} domain - tls:did:<domain>
-   * @param {string} key - Signing tls key in pem format
-   */
-  async registerContract(domain: string, key: string): Promise<void> {
-    if (domain?.length === 0) {
-      throw new Error('No domain provided');
+    const previousChangeBlockBN = events[events.length - 1].args.previousChange;
+    const previousChangeBlock = previousChangeBlockBN.toNumber();
+    if (previousChangeBlock > 0) {
+      await this.queryChain(filters, previousChangeBlock);
     }
-    await this.setDomain(domain);
-    await this.signContract(key);
 
-    //Create registry contract object and connect to contract
-    const registry = new Contract(
-      this.registry,
-      TLSDIDRegistryContract.abi,
-      this.provider
-    );
-    const registryWithSigner = registry.connect(this.wallet);
-
-    //Register TLS DID Contract address on registry
-    const tx = await registryWithSigner.registerContract(
-      domain,
-      this.contract.address
-    );
-    const receipt = await tx.wait();
-    if (receipt.status === 0) {
-      throw new Error('registerContract unsuccessful');
-    }
+    return events;
   }
 
-  /**
-   * Sets domain
-   * @param {string} domain - tls:did:<domain>
-   */
-  private async setDomain(domain: string): Promise<void> {
-    const tx = await this.contract.setDomain(domain);
-    const receipt = await tx.wait();
-    if (receipt.status === 1) {
-      this.domain = domain;
-    } else {
-      throw new Error('setDomain unsuccessful');
-    }
+  private async queryBlock(
+    filters: EventFilter[],
+    block: number
+  ): Promise<Event[]> {
+    //TODO This could be more efficient, ethers however only correctly decodes events if event type is present in event filter
+    //The block with the last change is search for all types of changed events
+    let events = (
+      await Promise.all(
+        filters.map((filter) => this.registry.queryFilter(filter, block, block))
+      )
+    ).flat();
+    return events;
   }
+
+  // private async getExpiry() {
+  //   const expiryBN: BigNumber = await this.contract.expiry();
+  //   this.expiry = new Date(expiryBN.toNumber());
+  // }
+
+  // private async getAttributes() {
+  //   const attributeCountBN = await this.contract.getAttributeCount();
+  //   const attributeCount = attributeCountBN.toNumber();
+
+  //   //Creates and waits for an array of promises each containing an getAttribute call
+  //   const attributes = await Promise.all(
+  //     Array.from(Array(attributeCount).keys()).map((i) =>
+  //       this.contract.getAttribute(i)
+  //     )
+  //   );
+
+  //   //Transforms array representation of attributes to object representation
+  //   attributes.forEach((attribute) => {
+  //     const path = attribute['0'];
+  //     const value = attribute['1'];
+  //     this.attributes.push({ path, value });
+  //   });
+  // }
+
+  // private async getChains() {
+  //   const chainCountBN = await this.contract.getChainCount();
+  //   const chainCount = chainCountBN.toNumber();
+
+  //   //Creates and waits for an array of promisees each containing an getChain call
+  //   const chains = await Promise.all(
+  //     Array.from(Array(chainCount).keys()).map((i) => this.contract.getChain(i))
+  //   );
+
+  //   //Splits concatenated cert string to array of certs
+  //   this.chains = chains.map((chain) => chainToCerts(chain));
+  // }
+
+  // private async getSignature() {
+  //   this.signature = await this.contract.signature();
+  // }
 
   /**
    * Adds attribute to DID Document
@@ -194,7 +193,10 @@ export class TLSDID {
    * @param {string} key - Signing tls key in pem format
    */
   async addAttribute(path: string, value: string, key: string): Promise<void> {
-    const tx = await this.contract.addAttribute(path, value);
+    if (this.domain?.length === 0) {
+      throw new Error('No domain provided');
+    }
+    const tx = await this.registry.addAttribute(this.domain, path, value);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.attributes.push({ path, value });
@@ -210,8 +212,11 @@ export class TLSDID {
    * @param {string} key - Signing tls key in pem format
    */
   async setExpiry(date: Date, key: string): Promise<void> {
+    if (this.domain?.length === 0) {
+      throw new Error('No domain provided');
+    }
     const expiry = date.getTime();
-    const tx = await this.contract.setExpiry(expiry);
+    const tx = await this.registry.setExpiry(this.domain, expiry);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.expiry = date;
@@ -233,32 +238,21 @@ export class TLSDID {
     //Hash contract and sign hash with pem private key
     const hash = hashContract(
       this.domain,
-      this.contract.address,
+      'TODO',
       this.attributes,
       this.expiry,
-      this.chains
+      [this.chain]
     );
     const signature = sign(key, hash);
 
     //Update contract with new signature
-    const tx = await this.contract.setSignature(signature);
+    const tx = await this.registry.setSignature(this.domain, signature);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.signature = signature;
     } else {
       throw new Error('setSignature unsuccessful');
     }
-  }
-
-  /**
-   * Gets address
-   * @returns {string} address
-   */
-  getAddress(): string {
-    if (!this.contract) {
-      throw new Error('No linked ethereum contract available');
-    }
-    return this.contract.address;
   }
 
   /**
@@ -269,11 +263,14 @@ export class TLSDID {
    * @param {string} key - Signing tls key in pem format
    */
   async addChain(certs: string[], key: string) {
+    if (this.domain?.length === 0) {
+      throw new Error('No domain provided');
+    }
     const joinedCerts = certs.join('\n');
-    const tx = await this.contract.addChain(joinedCerts);
+    const tx = await this.registry.addChain(this.domain, joinedCerts);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
-      this.chains.push(certs);
+      this.chain = certs;
       await this.signContract(key);
     } else {
       throw new Error(`addChain unsuccessful`);
@@ -288,15 +285,14 @@ export class TLSDID {
    * @param {string} key - Signing tls key in pem format
    */
   async delete() {
-    const tx = await this.contract.remove(this.registry);
+    const tx = await this.registry.remove(this.registry);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
-      this.contract = null;
       this.domain = null;
       this.attributes = [];
       this.expiry = null;
       this.signature = null;
-      this.chains = [];
+      this.chain = [];
     } else {
       throw new Error(`delete unsuccessful`);
     }
