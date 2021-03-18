@@ -1,29 +1,13 @@
-import { Contract, providers } from 'ethers';
+import { providers } from 'ethers';
 import { readFileSync } from 'fs';
-import TLSDIDRegistryContract from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDRegistry.json';
 import { TLSDID } from '../index';
 import c from './testConfig.json';
 
-//TODO verify signatures after value updates
 //TODO import registry address from tls-did-registry or tls-did-resolver
 
 const domain = 'did-tls.de';
 
-let pemKey: string;
-let tlsDid: TLSDID;
-let address: string;
-
-describe('TLSDID', () => {
-  beforeAll(() => {
-    pemKey = readFileSync(__dirname + c.privKeyPath, 'utf8');
-  });
-
-  it('should instantiate TLSDID without provider and registry addresses', () => {
-    let tlsDid = new TLSDID(domain, c.etherPrivKey);
-    //Assert that the tlsDid has been instantiated
-    expect(tlsDid).toBeDefined();
-  });
-
+describe('TLSDID object instantiation', () => {
   it('should instantiate TLSDID with rpcUrl', () => {
     let tlsDid = new TLSDID(domain, c.etherPrivKey, {
       registry: c.registryAddress,
@@ -47,7 +31,10 @@ describe('TLSDID', () => {
   });
 });
 
-describe('TLSDID', () => {
+describe('TLSDID operations', () => {
+  let pemKey: string;
+  let tlsDid: TLSDID;
+
   beforeAll(() => {
     pemKey = readFileSync(__dirname + c.privKeyPath, 'utf8');
     tlsDid = new TLSDID(domain, c.etherPrivKey, {
@@ -58,23 +45,6 @@ describe('TLSDID', () => {
     });
   });
 
-  // it('should connect to TLSDID contract', async () => {
-  //   const tlsDidDuplicate = new TLSDID(domain, c.etherPrivKey, {
-  //     registry: c.registryAddress,
-  //     providerConfig: {
-  //       rpcUrl: c.jsonRpcUrl,
-  //     },
-  //   });
-
-  //   //Assert that connecting to existing TLSDID Contract does not throw error
-  //   expect(
-  //     async () => await tlsDidDuplicate.connectToContract(address)
-  //   ).not.toThrow();
-
-  //   //Assert that connected TLSDID Contract has correct address
-  //   expect(tlsDidDuplicate.getAddress()).toEqual(address);
-  // });
-
   it('should add attribute to TLSDID contract', async () => {
     await tlsDid.addAttribute('parent/child', 'value', pemKey);
 
@@ -84,18 +54,20 @@ describe('TLSDID', () => {
     });
     expect(includedO).toBeTruthy();
 
-    //Assert that the new attribute is stored in the TLSDID contract
-    // const tlsDidDuplicate = new TLSDID(domain, c.etherPrivKey, {
-    //   registry: c.registryAddress,
-    //   providerConfig: {
-    //     rpcUrl: c.jsonRpcUrl,
-    //   },
-    // });
-    // const test = await tlsDidDuplicate.connectToContract(address);
-    // const includedC = tlsDidDuplicate.attributes.some((item) => {
-    //   return item.path === 'parent/child' && item.value === 'value';
-    // });
-    // expect(includedC).toBeTruthy();
+    //Assert that expiry is stored TLSDID contract
+    const tlsDidDuplicate = new TLSDID(domain, c.etherPrivKey, {
+      registry: c.registryAddress,
+      providerConfig: {
+        rpcUrl: c.jsonRpcUrl,
+      },
+    });
+    await tlsDidDuplicate.loadDataFromRegistry();
+
+    const includedC = tlsDidDuplicate.attributes.some((item) => {
+      return item.path === 'parent/child' && item.value === 'value';
+    });
+    expect(includedC).toBeTruthy();
+    expect(tlsDidDuplicate.signature).toBe(tlsDid.signature);
   });
 
   it('should add expiry to TLSDID contract', async () => {
@@ -112,7 +84,7 @@ describe('TLSDID', () => {
         rpcUrl: c.jsonRpcUrl,
       },
     });
-    await tlsDidDuplicate.getEvents();
+    await tlsDidDuplicate.loadDataFromRegistry();
 
     expect(tlsDidDuplicate.expiry).toStrictEqual(expiry);
     expect(tlsDidDuplicate.signature).toBe(tlsDid.signature);
@@ -133,7 +105,7 @@ describe('TLSDID', () => {
         rpcUrl: c.jsonRpcUrl,
       },
     });
-    await tlsDidDuplicate.getEvents();
+    await tlsDidDuplicate.loadDataFromRegistry();
 
     expect(tlsDidDuplicate.chain).toEqual(chain);
   });
@@ -147,6 +119,6 @@ describe('TLSDID', () => {
     expect(tlsDid.signature).toEqual(null);
     expect(tlsDid.chain).toEqual([]);
 
-    await expect(tlsDid.getEvents()).rejects.toThrow();
+    await expect(tlsDid.loadDataFromRegistry()).rejects.toThrow();
   });
 });

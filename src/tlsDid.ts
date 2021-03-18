@@ -1,19 +1,13 @@
-import {
-  Wallet,
-  Contract,
-  Event,
-  providers,
-  BigNumber,
-  EventFilter,
-} from 'ethers';
-import { hexZeroPad, Interface } from 'ethers/lib/utils';
+import { Wallet, Contract, Event, providers, EventFilter } from 'ethers';
+import { hexZeroPad } from 'ethers/lib/utils';
 import TLSDIDRegistry from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDRegistry.json';
-import { NetworkConfig, Attribute } from './types';
+import {
+  REGISTRY,
+  NetworkConfig,
+  Attribute,
+} from '@digitalcredentials/tls-did-utils';
 import { configureProvider, chainToCerts } from './utils';
 import { sign, hashContract } from '@digitalcredentials/tls-did-utils';
-
-//TODO import from tls-did-registry or tls-did-resolver
-const REGISTRY = '0xaF9BA0dFa7D79eA2d1cFD28996dEf081c29dA51e';
 
 export class TLSDID {
   private provider: providers.Provider;
@@ -51,20 +45,10 @@ export class TLSDID {
     this.registry = registry.connect(this.wallet);
   }
 
-  /**
-   * Connects to existing TLS DID contract
-   * @param {string} address - ethereum address of existing TLS DID Contract
-   */
-  async loadDataFromRegistry(address: string): Promise<void> {
-    // await Promise.all([
-    //   this.getExpiry(),
-    //   this.getAttributes(),
-    //   this.getChains(),
-    //   this.getSignature(),
-    // ]);
-  }
-
-  public async getEvents() {
+  public async loadDataFromRegistry() {
+    if (this.domain?.length === 0) {
+      throw new Error('No domain provided');
+    }
     const lastChangeBlockBN = await this.registry.owned(
       this.wallet.address,
       this.domain
@@ -92,7 +76,7 @@ export class TLSDID {
     filters: EventFilter[],
     block: number
   ): Promise<Event[]> {
-    //TODO This could be more efficient, ethers however only correctly decodes events if event type is present in event filter
+    //TODO This could be more efficient, the ethers library only correctly decodes events if event type is present in event filter
     //The block with the last change is search for all types of changed events
     let events = await this.queryBlock(filters, block);
     if (events.length === 0) {
@@ -144,47 +128,6 @@ export class TLSDID {
     ).flat();
     return events;
   }
-
-  // private async getExpiry() {
-  //   const expiryBN: BigNumber = await this.contract.expiry();
-  //   this.expiry = new Date(expiryBN.toNumber());
-  // }
-
-  // private async getAttributes() {
-  //   const attributeCountBN = await this.contract.getAttributeCount();
-  //   const attributeCount = attributeCountBN.toNumber();
-
-  //   //Creates and waits for an array of promises each containing an getAttribute call
-  //   const attributes = await Promise.all(
-  //     Array.from(Array(attributeCount).keys()).map((i) =>
-  //       this.contract.getAttribute(i)
-  //     )
-  //   );
-
-  //   //Transforms array representation of attributes to object representation
-  //   attributes.forEach((attribute) => {
-  //     const path = attribute['0'];
-  //     const value = attribute['1'];
-  //     this.attributes.push({ path, value });
-  //   });
-  // }
-
-  // private async getChains() {
-  //   const chainCountBN = await this.contract.getChainCount();
-  //   const chainCount = chainCountBN.toNumber();
-
-  //   //Creates and waits for an array of promisees each containing an getChain call
-  //   const chains = await Promise.all(
-  //     Array.from(Array(chainCount).keys()).map((i) => this.contract.getChain(i))
-  //   );
-
-  //   //Splits concatenated cert string to array of certs
-  //   this.chains = chains.map((chain) => chainToCerts(chain));
-  // }
-
-  // private async getSignature() {
-  //   this.signature = await this.contract.signature();
-  // }
 
   /**
    * Adds attribute to DID Document

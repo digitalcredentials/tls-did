@@ -1,5 +1,5 @@
 import { providers } from 'ethers';
-import { ProviderConfig } from './types';
+import { ProviderConfig } from '@digitalcredentials/tls-did-utils';
 
 /**
  * Splits string of pem keys to array of pem keys
