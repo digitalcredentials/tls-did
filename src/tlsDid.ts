@@ -67,7 +67,7 @@ export class TLSDID {
     await this.queryChain(filters, lastChangeBlock);
   }
 
-  private async queryChain(filters: EventFilter[], block: number): Promise<Event[]> {
+  private async queryChain(filters: EventFilter[], block: number): Promise<void> {
     //TODO This could be more efficient, the ethers library only correctly decodes events if event type is present in event filter
     //The block with the last change is search for all types of changed events
     let events = await this.queryBlock(filters, block);
@@ -98,13 +98,12 @@ export class TLSDID {
       }
     });
 
+    // TODO is the event array sorted by creation time
     const previousChangeBlockBN = events[events.length - 1].args.previousChange;
     const previousChangeBlock = previousChangeBlockBN.toNumber();
     if (previousChangeBlock > 0) {
       await this.queryChain(filters, previousChangeBlock);
     }
-
-    return events;
   }
 
   private async getOwnership() {
@@ -118,7 +117,6 @@ export class TLSDID {
     const claimants = await Promise.all(
       Array.from(Array(claimantsCount).keys()).map((i) => this.registry.claimantsRegistry(this.domain, i))
     );
-    const test = claimants.includes(this.wallet.address);
     this.registered = claimants.includes(this.wallet.address);
   }
 
