@@ -113,12 +113,13 @@ describe('TLSDID operations', () => {
   it('should delete DID', async () => {
     await tlsDid.delete();
 
-    expect(tlsDid.domain).toEqual(null);
+    //The last change block index should be reset and tls did objects values set to null
     expect(tlsDid.attributes).toEqual([]);
     expect(tlsDid.expiry).toEqual(null);
     expect(tlsDid.signature).toEqual(null);
     expect(tlsDid.chain).toEqual([]);
-
-    await expect(tlsDid.loadDataFromRegistry()).rejects.toThrow();
+    //The registration however is not deleted in the registry contract
+    expect(tlsDid.domain).toEqual(domain);
+    expect(tlsDid.registered).toEqual(true);
   });
 });

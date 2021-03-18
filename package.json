@@ -33,7 +33,6 @@
     "@digitalcredentials/tls-did-registry": "github:tls-did-project/tls-did-registry#feature/eventDrivenRegistry",
     "@digitalcredentials/tls-did-resolver": "^0.1.1",
     "@digitalcredentials/tls-did-utils": "github:digitalcredentials/tls-did-utils#master",
-    "ethers": "^5.0.17",
-    "save-dev": "^0.0.1-security"
+    "ethers": "^5.0.17"
   }
 }

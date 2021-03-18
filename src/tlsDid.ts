@@ -1,11 +1,7 @@
-import { Wallet, Contract, Event, providers, EventFilter } from 'ethers';
+import { Wallet, Contract, Event, providers, EventFilter, BigNumber } from 'ethers';
 import { hexZeroPad } from 'ethers/lib/utils';
 import TLSDIDRegistry from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDRegistry.json';
-import {
-  REGISTRY,
-  NetworkConfig,
-  Attribute,
-} from '@digitalcredentials/tls-did-utils';
+import { REGISTRY, NetworkConfig, Attribute } from '@digitalcredentials/tls-did-utils';
 import { configureProvider, chainToCerts } from './utils';
 import { sign, hashContract } from '@digitalcredentials/tls-did-utils';
 
@@ -13,6 +9,7 @@ export class TLSDID {
   private provider: providers.Provider;
   private wallet: Wallet;
   private registry: Contract;
+  registered: boolean;
   domain: string;
   attributes: Attribute[] = [];
   expiry: Date;
@@ -27,11 +24,7 @@ export class TLSDID {
    * @param {string} [registry] - ethereum address of TLS DID Contract Registry
    * @param {IProviderConfig} providerConfig - config for ethereum provider {}
    */
-  constructor(
-    domain,
-    ethereumPrivateKey: string,
-    networkConfig: NetworkConfig = {}
-  ) {
+  constructor(domain, ethereumPrivateKey: string, networkConfig: NetworkConfig = {}) {
     this.domain = domain;
     this.provider = configureProvider(networkConfig.providerConfig);
     this.wallet = new Wallet(ethereumPrivateKey, this.provider);
@@ -49,13 +42,17 @@ export class TLSDID {
     if (this.domain?.length === 0) {
       throw new Error('No domain provided');
     }
-    const lastChangeBlockBN = await this.registry.owned(
-      this.wallet.address,
-      this.domain
-    );
+
+    await this.getOwnership();
+    if (!this.registered) {
+      //No did was registered with the domain ethereum address combination
+      return;
+    }
+
+    const lastChangeBlockBN = await this.registry.changeRegistry(this.wallet.address, this.domain);
     const lastChangeBlock = lastChangeBlockBN.toNumber();
     if (lastChangeBlock === 0) {
-      console.log('No previous changes found for this domain');
+      //No previous changes found for this domain
       return;
     }
 
@@ -65,17 +62,12 @@ export class TLSDID {
       this.registry.filters.AttributeChanged(),
       this.registry.filters.ChainChanged(),
     ];
-    filters.forEach((filter) =>
-      filter.topics.push(hexZeroPad(this.wallet.address, 32))
-    );
+    filters.forEach((filter) => filter.topics.push(hexZeroPad(this.wallet.address, 32)));
 
     await this.queryChain(filters, lastChangeBlock);
   }
 
-  private async queryChain(
-    filters: EventFilter[],
-    block: number
-  ): Promise<Event[]> {
+  private async queryChain(filters: EventFilter[], block: number): Promise<Event[]> {
     //TODO This could be more efficient, the ethers library only correctly decodes events if event type is present in event filter
     //The block with the last change is search for all types of changed events
     let events = await this.queryBlock(filters, block);
@@ -115,18 +107,40 @@ export class TLSDID {
     return events;
   }
 
-  private async queryBlock(
-    filters: EventFilter[],
-    block: number
-  ): Promise<Event[]> {
-    //TODO This could be more efficient, ethers however only correctly decodes events if event type is present in event filter
-    //The block with the last change is search for all types of changed events
-    let events = (
-      await Promise.all(
-        filters.map((filter) => this.registry.queryFilter(filter, block, block))
-      )
-    ).flat();
+  private async getOwnership() {
+    if (this.domain?.length === 0) {
+      throw new Error('No domain provided');
+    }
+
+    const claimantsCountBN: BigNumber = await this.registry.getClaimantsCount(this.domain);
+    const claimantsCount = claimantsCountBN.toNumber();
+
+    const claimants = await Promise.all(
+      Array.from(Array(claimantsCount).keys()).map((i) => this.registry.claimantsRegistry(this.domain, i))
+    );
+    const test = claimants.includes(this.wallet.address);
+    this.registered = claimants.includes(this.wallet.address);
+  }
+
+  private async queryBlock(filters: EventFilter[], block: number): Promise<Event[]> {
+    let events = (await Promise.all(filters.map((filter) => this.registry.queryFilter(filter, block, block)))).flat();
     return events;
+  }
+
+  /**
+   * Registers account to claimants of DID identifier( domain)
+   */
+  private async register(): Promise<void> {
+    if (this.domain?.length === 0) {
+      throw new Error('No domain provided');
+    }
+    const tx = await this.registry.registerOwnership(this.domain);
+    const receipt = await tx.wait();
+    if (receipt.status === 1) {
+      this.registered = true;
+    } else {
+      throw new Error('registration unsuccessful');
+    }
   }
 
   /**
@@ -139,13 +153,20 @@ export class TLSDID {
     if (this.domain?.length === 0) {
       throw new Error('No domain provided');
     }
-    const tx = await this.registry.addAttribute(this.domain, path, value);
-    const receipt = await tx.wait();
-    if (receipt.status === 1) {
-      this.attributes.push({ path, value });
-      await this.signContract(key);
-    } else {
-      throw new Error('setAttribute unsuccessful');
+    if (!this.registered) {
+      await this.register();
+    }
+    try {
+      const tx = await this.registry.addAttribute(this.domain, path, value);
+      const receipt = await tx.wait();
+      if (receipt.status === 1) {
+        this.attributes.push({ path, value });
+        await this.signContract(key);
+      } else {
+        throw new Error('setAttribute unsuccessful');
+      }
+    } catch (error) {
+      console.error(error);
     }
   }
 
@@ -157,6 +178,9 @@ export class TLSDID {
   async setExpiry(date: Date, key: string): Promise<void> {
     if (this.domain?.length === 0) {
       throw new Error('No domain provided');
+    }
+    if (!this.registered) {
+      await this.register();
     }
     const expiry = date.getTime();
     const tx = await this.registry.setExpiry(this.domain, expiry);
@@ -177,15 +201,12 @@ export class TLSDID {
     if (this.domain?.length === 0) {
       throw new Error('No domain provided');
     }
+    if (!this.registered) {
+      await this.register();
+    }
 
     //Hash contract and sign hash with pem private key
-    const hash = hashContract(
-      this.domain,
-      'TODO',
-      this.attributes,
-      this.expiry,
-      [this.chain]
-    );
+    const hash = hashContract(this.domain, 'TODO', this.attributes, this.expiry, [this.chain]);
     const signature = sign(key, hash);
 
     //Update contract with new signature
@@ -209,6 +230,9 @@ export class TLSDID {
     if (this.domain?.length === 0) {
       throw new Error('No domain provided');
     }
+    if (!this.registered) {
+      await this.register();
+    }
     const joinedCerts = certs.join('\n');
     const tx = await this.registry.addChain(this.domain, joinedCerts);
     const receipt = await tx.wait();
@@ -231,7 +255,6 @@ export class TLSDID {
     const tx = await this.registry.remove(this.registry);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
-      this.domain = null;
       this.attributes = [];
       this.expiry = null;
       this.signature = null;

@@ -1,48 +1,31 @@
-import { NetworkConfig, Attribute } from './types';
+import { NetworkConfig, Attribute } from '@digitalcredentials/tls-did-utils';
 export declare class TLSDID {
-    private registry;
     private provider;
     private wallet;
-    private contract;
+    private registry;
+    registered: boolean;
     domain: string;
     attributes: Attribute[];
     expiry: Date;
     signature: string;
-    chains: string[][];
+    chain: string[];
     /**
      * //TODO Allow for general provider type, see ethr-did implementation
      * Creates an instance of tlsdid.
-     * @param {string} ethereumPrivateKey - ethereum private key with enougth
+     * @param {string} ethereumPrivateKey - ethereum private key with enough
      * funds to pay for transactions
      * @param {string} [registry] - ethereum address of TLS DID Contract Registry
      * @param {IProviderConfig} providerConfig - config for ethereum provider {}
      */
-    constructor(ethereumPrivateKey: string, networkConfig?: NetworkConfig);
+    constructor(domain: any, ethereumPrivateKey: string, networkConfig?: NetworkConfig);
+    loadDataFromRegistry(): Promise<void>;
+    private queryChain;
+    private getOwnership;
+    private queryBlock;
     /**
-     * Connects to existing TLS DID contract
-     * @param {string} address - ethereum address of existing TLS DID Contract
+     * Registers account to claimants of DID identifier( domain)
      */
-    connectToContract(address: string): Promise<void>;
-    private getDomain;
-    private getExpiry;
-    private getAttributes;
-    private getChains;
-    private getSignature;
-    /**
-     * Deploys TLS DID Contract
-     */
-    deployContract(): Promise<void>;
-    /**
-     * Registers TLS DID Contract with TLS DID Registry
-     * @param {string} domain - tls:did:<domain>
-     * @param {string} key - Signing tls key in pem format
-     */
-    registerContract(domain: string, key: string): Promise<void>;
-    /**
-     * Sets domain
-     * @param {string} domain - tls:did:<domain>
-     */
-    private setDomain;
+    private register;
     /**
      * Adds attribute to DID Document
      * @param {string} path - Path of value, format 'parent/child' or 'parent[]/child'
@@ -61,11 +44,6 @@ export declare class TLSDID {
      * @param {string} key - Signing tls key in pem format
      */
     private signContract;
-    /**
-     * Gets address
-     * @returns {string} address
-     */
-    getAddress(): string;
     /**
      * Stores certs in the TLS DID Certificate Contract
      * @dev Do not store root certificates, they are passed to the resolver
