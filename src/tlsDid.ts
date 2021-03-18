@@ -204,7 +204,7 @@ export class TLSDID {
     }
 
     //Hash contract and sign hash with pem private key
-    const hash = hashContract(this.domain, 'TODO', this.attributes, this.expiry, [this.chain]);
+    const hash = hashContract(this.domain, this.attributes, this.expiry, [this.chain]);
     const signature = sign(key, hash);
 
     //Update contract with new signature
