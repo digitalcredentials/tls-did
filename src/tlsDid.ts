@@ -25,6 +25,13 @@ export class TLSDID {
    * @param {IProviderConfig} providerConfig - config for ethereum provider {}
    */
   constructor(domain, ethereumPrivateKey: string, networkConfig: NetworkConfig = {}) {
+    if (domain?.length === 0) {
+      throw new Error('No domain provided');
+    }
+    if (ethereumPrivateKey?.length === 0) {
+      throw new Error('No ethereum private key provided');
+    }
+
     this.domain = domain;
     this.provider = configureProvider(networkConfig.providerConfig);
     this.wallet = new Wallet(ethereumPrivateKey, this.provider);
