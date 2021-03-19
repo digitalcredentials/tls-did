@@ -151,5 +151,24 @@ describe('TLS-DID operations', () => {
     //The registration however is not deleted in the registry contract
     expect(tlsDid.domain).toEqual(domain);
     expect(tlsDid.registered).toEqual(true);
+
+    //Assert the TLS-DID registry last change block is set to 0
+    const tlsDidDuplicate = new TLSDID(domain, c.etherPrivKey, {
+      registry: c.registryAddress,
+      providerConfig: {
+        rpcUrl: c.jsonRpcUrl,
+      },
+    });
+    await tlsDidDuplicate.loadDataFromRegistry();
+
+    //The last change block index should be reset and tls did objects values set to null
+    expect(tlsDid.attributes).toEqual([]);
+    expect(tlsDid.expiry).toEqual(null);
+    expect(tlsDid.signature).toEqual(null);
+    expect(tlsDid.chain).toEqual([]);
+
+    //The registration however is not deleted in the registry contract
+    expect(tlsDid.domain).toEqual(domain);
+    expect(tlsDid.registered).toEqual(true);
   });
 });
