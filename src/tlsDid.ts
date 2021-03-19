@@ -2,8 +2,8 @@ import { Wallet, Contract, Event, providers, EventFilter, BigNumber } from 'ethe
 import { hexZeroPad } from 'ethers/lib/utils';
 import TLSDIDRegistry from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDRegistry.json';
 import { REGISTRY, NetworkConfig, Attribute } from '@digitalcredentials/tls-did-utils';
-import { configureProvider, chainToCerts } from './utils';
-import { sign, hashContract } from '@digitalcredentials/tls-did-utils';
+import { chainToCerts } from './utils';
+import { sign, hashContract, configureProvider } from '@digitalcredentials/tls-did-utils';
 
 export class TLSDID {
   private provider: providers.Provider;
