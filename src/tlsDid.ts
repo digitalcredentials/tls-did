@@ -266,7 +266,7 @@ export class TLSDID {
    * Deletes TLS-DID by resetting the reference to the block containing the last change to 0
    */
   async delete() {
-    const tx = await this.registry.remove(this.wallet.address);
+    const tx = await this.registry.remove(this.domain);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.attributes = [];
