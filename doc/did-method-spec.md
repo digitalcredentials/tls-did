@@ -150,7 +150,7 @@ The time to resolve one to multiple TLS-DID contracts scales linearly.
 
 In a benchmark run with a local testnet the resolve-time of:
  - one TLS-DID contract was approximately 600ms.
- - 100 TLS-DID contracts was approximately 57960ms.
+ - 100 TLS-DID contracts was approximately 20400ms.
 
 The mitigation to this attack, is the cost of deployment of a TLS-DID contract to the ethereum mainnet.
 
