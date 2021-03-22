@@ -8,8 +8,7 @@ The [tls-did](https://github.com/digitalcredentials/tls-did) and the [tls-did-re
     - [Update](#update)
     - [Read](#read)
     - [Delete](#delete)
-  - [Smart Contracts](#smart-contracts)
-    - [TLSDID Contract](#tlsdid-contract)
+  - [Smart Contract](#smart-contract)
     - [TLSDIDRegistry Contract](#tlsdidregistry-contract)
   - [Data Types](#data-types)
     - [ProviderConfig](#providerconfig)
@@ -22,6 +21,7 @@ In this section we describe how to use the [tls-did](https://github.com/digitalc
 ### Create
 
 To create a TLS-DID, import the tls-did library. First instantiate a TLS-DID object. The constructor expects:
+* The TLS-DID identifier, a domain
 * The private key of an ethereum account with sufficient funds.
 * Optionally you can pass a [networkConfig](#networkConfig).
 
@@ -29,7 +29,7 @@ To create a TLS-DID, import the tls-did library. First instantiate a TLS-DID obj
 import { TLSDID } from 'tls-did';
 
 //Setup TLS-DID object
-const tlsDid = new TLSDID(etherPrivateKey, {
+const tlsDid = new TLSDID(domain, etherPrivateKey, {
       registry: REGISTRY_ADDRESS,
       providerConfig: {
         jsonRpcUrl: jsonRpcUrl),
@@ -37,27 +37,19 @@ const tlsDid = new TLSDID(etherPrivateKey, {
 });
 ```
 
-After you instantiated the TLS-DID object you can either deploy a new [TLSDID Contract](#TLSDID-Contract) to the Ethereum chain or connect to a previously deployed contract using its smart contract address. After deployment the smart contract address is stored in the TLS-DID object's address property.
+After you instantiated the TLS-DID object you can either claim control over a domain in the [TLS-DID Registry Contract](#TLSDIDRegistry-Contract) or connect to a previous claim and load the associated date stored on chain. A claim consists of a domain and an ethereum address combination.
 
 ```javascript
-// Deploy new contract
-await tlsDid.deployContract();
-const address = tlsDid.address;
+//Register new claim
+await tlsDid.register();
 ```
 
 ```javascript
-// Connect to existing contract
-await tlsDid.connectToContract(address)
+//Load data stored for existing
+await tlsDid.loadDataFromRegistry()
 ```
 
-In the next step you register the newly created [TLSDID Contract](#TLSDID-Contract) in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). The registerContract method expects the method specific identifier, a Fully-Qualified Domain Names (FQDN) and the FQDN's TLS private key.
-
-```javascript
-//Register TLSDIDContract in the TLSDIDRegistry
-await tlsDid.registerContract(domain, pemKey)
-```
-
-In the final step you store the FQDN's TLS cert chain up to, **but not including the TLS root certificate**. You pass the cert chain as an array of pem encoded certs and the TLS private key to the addChain method. **Note** that the FQDN's certificate has to be the first element of the array and all intermediate certs should follow in their logical order.
+In the next step, you store the domain's TLS cert chain up to, **but not including the TLS root certificate** on chain. You pass the cert chain as an array of pem encoded certs and the TLS private key to the addChain method. **Note** that the domain's certificate has to be the first element of the array and all intermediate certs should follow in their logical order.
 
 ```javascript
 //Exemplary cert chain
@@ -65,32 +57,46 @@ const chain = [
   '-----BEGIN CERTIFICATE-----\nCert\n-----END CERTIFICATE-----',
   '-----BEGIN CERTIFICATE-----\nIntermediateCert\n-----END CERTIFICATE-----',
 ];
-//Store cert chain in TLSDIDContract
-await tlsDid.addChain(chain, pemKey);
+//Store cert chain in on chain
+await tlsDid.addChain(chain);
+```
+
+In the final step, you store a signature of the previously stored data on chain.
+
+```javascript
+//Sign all data and store signature on chain
+await tlsDid.sign();
 ```
 ### Update
 
 To update or add information to the DID document the TLS-DID object has multiple methods.
 
-You can add an expiry to your [TLSDID Contract](#TLSDID-Contract). After this date the contract is still readable, however the tls-did-resolver library will interpret this as an invalid contract and not resolve the DID.
+You can add an expiry. After this date you can still use `await tlsDid.loadDataFromRegistry()`, however the tls-did-resolver library will interpret this as an invalid contract and not resolve the claim.
 
 ```javascript
 //Define expiry as an JS Data object
 const expiry = new Date('12 / 12 / 2040');
-//Add or update the expiry to/in the TLSDIDContract
-await tlsDid.setExpiry(expiry, pemKey);
+//Add or update the expiry
+await tlsDid.setExpiry(expiry);
 ```
 
-You can add attributes to your DID document with the addAttribute method. The addAttribute method
+You can add attributes to your DID Document with the addAttribute method. The addAttribute method
 expects a path and value. The path resembles XPath. The value can currently only be a string. The [read/resolve](#read) constructs the DID document from the path/value combinations.
 
 ```javascript
-//Adds {parent: {child: value}} to the DID document / TLSDIDContract
-await tlsDid.addAttribute('parent/child', 'value', pemKey);
-//Adds {array: [{element: value}]} to the DID document /TLSDIDContract
-await tlsDid.addAttribute('arrayA[0]/element', 'value', pemKey);
-//Adds {array: [value]} to the DID document / TLSDIDContract
-await tlsDid.addAttribute('arrayB[0]', 'value', pemKey);
+//Adds {parent: {child: value}} to the DID document
+await tlsDid.addAttribute('parent/child', 'value');
+//Adds {array: [{element: value}]} to the DID document
+await tlsDid.addAttribute('arrayA[0]/element', 'value');
+//Adds {array: [value]} to the DID document
+await tlsDid.addAttribute('arrayB[0]', 'value');
+```
+
+To certify the updated data you have to sign the updated data. You can run multiple updates before signing.
+
+```javascript
+//Sign all data and store signature on chain
+await tlsDid.sign();
 ```
 ### Read
 
@@ -124,21 +130,34 @@ Currently the TLS-DID libraries do not allow to resolve paths/fragments of the D
 
 ### Delete
 
-To delete the TLS-DID, execute the TLSDID's delete method. This triggers the [TLSDID Contract's](#TLSDID-Contract) self destruct mechanism and will replace the reference to the [TLSDID Contract](#TLSDID-Contract) in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract) with *0x0000000000000000000000000000000000000000*. *Note* that running the delete method will remove all information stored in the TLSDID object's properties.
+To delete the TLS-DID, execute the TLSDID's delete method. This sets the last change block index to 0 in the [TLSDID Registry Contract](#TLSDIDRegistry-Contract). However, the claim (domain/ethereum address combination is not removed). *Note* that running the delete method will remove all information stored in the TLSDID object's properties.
 ```javascript
 await tlsDid.delete();
 ```
 
-## Smart Contracts
-In this section we shortly describe the two ethereum smart contracts the TLS-DID method uses. For more information please follow the links to the commented contract code.
-
-### TLSDID Contract
-
-The [TLSDID Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDID.sol) stores the certificate chain, all data of the DID document, an expiry and a signature. The TLS-DID resolver uses the signature to verify all data stored in the contract against the TLS certificate of the FQDN for which the TLS-DID was created.
+## Smart Contract
+In this section we shortly describe the TLS-DID Registry Contract.
 
 ### TLSDIDRegistry Contract
 
-The [TLSDIDRegistry Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDIDRegistry.sol) stores a mapping from TLS-DID method specific identifiers (FQDN) to one or multiple [TLSDID Contract's](#TLSDID-Contract) addresses.
+The [TLSDIDRegistry Contract](https://github.com/digitalcredentials/tls-did-registry/blob/master/contracts/TLSDIDRegistry.sol) stores claims to TLS-DID method specific identifiers (domains). A claim consists of a TLS-DID method specific identifier (domain) and an ethereum address. A claim points to a last change block number. Changes to a claim are stored as events on chain. The most recent change block number is stored in the registry. Events point to the previous event block number.
+
+**State Variables**
+Name | Function
+--- | ---
+changeRegistry | stores mapping from a ethereum address to a TLS-DID method specific identifiers (domain) to a last change block number.
+claimantsRegistry | stores a mapping from TLS-DID method specific identifier (domain) to an array of ethereum addresses.
+
+**Functions**
+Name | Function
+--- | ---
+registerOwnership | Registers claim (domain/caller ethereum address)
+getClaimantsCount | Gets count of claimants for domain
+setExpiry | Sets expiry of a claim
+setSignature | Sets signature of a claim
+addAttribute | Sets attributes of a DID Document of a claim
+addChain | Sets TLS certificate chain of a claim
+remove | Sets change registry last change block to 0
 
 ## Data Types
 
