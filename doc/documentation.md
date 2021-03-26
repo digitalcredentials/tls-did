@@ -37,7 +37,7 @@ const tlsDid = new TLSDID(domain, etherPrivateKey, {
 });
 ```
 
-After you instantiated the TLS-DID object you can either claim control over a domain in the [TLS-DID Registry Contract](#TLSDIDRegistry-Contract) or connect to a previous claim and load the associated date stored on chain. A claim consists of a domain and an ethereum address combination.
+After you instantiated the TLS-DID object you can either claim control over a TLS-DID identifier (domain) or connect to an existing claim. Claims are stored as TLS-DID identifier (domain)/ethereum address combinations on the [TLS-DID Registry Contract](#TLSDIDRegistry-Contract). To connect to an existing claim you have to use a TLS-DID object instantiated with the same TLS-DID identifier (domain)/ethereum address combination.
 
 ```javascript
 //Register new claim
@@ -49,7 +49,7 @@ await tlsDid.register();
 await tlsDid.loadDataFromRegistry()
 ```
 
-In the next step, you store the domain's TLS cert chain up to, **but not including the TLS root certificate** on chain. You pass the cert chain as an array of pem encoded certs and the TLS private key to the addChain method. **Note** that the domain's certificate has to be the first element of the array and all intermediate certs should follow in their logical order.
+In the next step, you store the domain's TLS cert chain up to, **but not including the TLS root certificate** on chain. You pass the cert chain as an array of pem encoded certs to the addChain method. **Note** that the domain's certificate has to be the first element of the array and all intermediate certs should follow in their logical order.
 
 ```javascript
 //Exemplary cert chain
@@ -61,17 +61,17 @@ const chain = [
 await tlsDid.addChain(chain);
 ```
 
-In the final step, you store a signature of the previously stored data on chain.
+In the final step, you store a signature of the previously stored data on chain. The data is signed with your domain's private TLS key in pem format.
 
 ```javascript
 //Sign all data and store signature on chain
-await tlsDid.sign();
+await tlsDid.sign(pemKey);
 ```
 ### Update
 
 To update or add information to the DID document the TLS-DID object has multiple methods.
 
-You can add an expiry. After this date you can still use `await tlsDid.loadDataFromRegistry()`, however the tls-did-resolver library will interpret this as an invalid contract and not resolve the claim.
+You can add an expiry. If the expiry is in the past, you can still use `await tlsDid.loadDataFromRegistry()`, however the tls-did-resolver library will interpret this as an invalid claim.
 
 ```javascript
 //Define expiry as an JS Data object
@@ -80,8 +80,7 @@ const expiry = new Date('12 / 12 / 2040');
 await tlsDid.setExpiry(expiry);
 ```
 
-You can add attributes to your DID Document with the addAttribute method. The addAttribute method
-expects a path and value. The path resembles XPath. The value can currently only be a string. The [read/resolve](#read) constructs the DID document from the path/value combinations.
+You can add attributes to your DID Document with the addAttribute method. The addAttribute method expects a path and value. The path resembles XPath. The value can currently only be a string. The [read/resolve](#read) constructs the DID document from the path/value combinations.
 
 ```javascript
 //Adds {parent: {child: value}} to the DID document
@@ -92,19 +91,16 @@ await tlsDid.addAttribute('arrayA[0]/element', 'value');
 await tlsDid.addAttribute('arrayB[0]', 'value');
 ```
 
-To certify the updated data you have to sign the updated data. You can run multiple updates before signing.
+To certify the updated data you have to sign the updated data. You can run multiple updates before signing. The data is signed with your domain's private TLS key in pem format.
 
 ```javascript
 //Sign all data and store signature on chain
-await tlsDid.sign();
+await tlsDid.sign(pemKey);
 ```
 ### Read
 
-For reading two paths exist:
 
-* The DID Controller reads the contract by connecting to the exiting TLSDID Contract](#TLSDID-Contract) as described in [Create](#Create). All available data is then accessible via the TLSDID object's properties. However, no validity check is performed when accessing data thru a [tls-did library](https://github.com/digitalcredentials/tls-did)  TLSDID object.
-
-* To resolve a TLS-DID, import the getResolver function from [tls-did-resolver library](https://github.com/digitalcredentials/tls-did-resolver). When calling the getResolver function you can pass a [ProviderConfig](#ProviderConfig) (if none is passed the standard ganache testnet rpc url is used), a registry address and a string array of trusted TLS root certificates in the pem format. If you do not pass the root certificates, the library uses node's TLS root certificates. The getResolver function returns a tlsResolver object which can either be used with the [did-resolver library](https://github.com/decentralized-identity/did-resolver) or directly, by passing a TLS-DID to the tlsResolver object's tls method.
+To resolve a TLS-DID, import the getResolver function from [tls-did-resolver library](https://github.com/digitalcredentials/tls-did-resolver). When calling the getResolver function you can pass a [ProviderConfig](#ProviderConfig) (if none is passed the standard ganache testnet rpc url is used), a registry address and a string array of trusted TLS root certificates in the pem format. If you do not pass the root certificates, the library uses node's TLS root certificates. The getResolver function returns a tlsResolver object which can either be used with the [did-resolver library](https://github.com/decentralized-identity/did-resolver) or directly by passing a TLS-DID to the tlsResolver object's tls method.
 
 ```javascript
 import { Resolver } from 'did-resolver'
