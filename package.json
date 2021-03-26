@@ -1,6 +1,6 @@
 {
   "name": "@digitalcredentials/tls-did",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
@@ -34,7 +34,7 @@
     "@digitalcredentials/tls-did-utils": "^0.0.1",
     "ethers": "^5.0.17"
   },
-    "files": [
+  "files": [
     "LICENSE",
     "README.md",
     "lib/",
