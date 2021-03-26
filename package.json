@@ -30,9 +30,8 @@
     "typescript": "^4.0.5"
   },
   "dependencies": {
-    "@digitalcredentials/tls-did-registry": "github:tls-did-project/tls-did-registry#feature/eventDrivenRegistry",
-    "@digitalcredentials/tls-did-resolver": "^0.1.1",
-    "@digitalcredentials/tls-did-utils": "github:digitalcredentials/tls-did-utils#master",
+    "@digitalcredentials/tls-did-registry": "^0.2.0",
+    "@digitalcredentials/tls-did-utils": "^0.0.1",
     "ethers": "^5.0.17"
   }
 }
