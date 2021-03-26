@@ -33,5 +33,11 @@
     "@digitalcredentials/tls-did-registry": "^0.2.0",
     "@digitalcredentials/tls-did-utils": "^0.0.1",
     "ethers": "^5.0.17"
-  }
+  },
+    "files": [
+    "LICENSE",
+    "README.md",
+    "lib/",
+    "doc/"
+  ]
 }
