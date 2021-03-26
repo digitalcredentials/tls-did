@@ -1,29 +1,13 @@
-import { Contract, providers } from 'ethers';
+import { providers } from 'ethers';
 import { readFileSync } from 'fs';
-import TLSDIDRegistryContract from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDRegistry.json';
 import { TLSDID } from '../index';
 import c from './testConfig.json';
 
-//TODO verify signatures after value updates
-//TODO import registry address from tls-did-registry or tls-did-resolver
+const domain = 'did-tls.de';
 
-let pemKey: string;
-let tlsDid: TLSDID;
-let address: string;
-
-describe('TLSDID instantiation', () => {
-  beforeAll(() => {
-    pemKey = readFileSync(__dirname + c.privKeyPath, 'utf8');
-  });
-
-  it('should instantiate TLSDID without provider and registry addresses', () => {
-    let tlsDid = new TLSDID(c.etherPrivKey);
-    //Assert that the tlsDid has been instantiated
-    expect(tlsDid).toBeDefined();
-  });
-
-  it('should instantiate TLSDID with rpcUrl', () => {
-    let tlsDid = new TLSDID(c.etherPrivKey, {
+describe('TLS-DID object instantiation', () => {
+  it('should instantiate TLS-DID with rpcUrl', () => {
+    let tlsDid = new TLSDID(domain, c.etherPrivKey, {
       registry: c.registryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
@@ -33,8 +17,8 @@ describe('TLSDID instantiation', () => {
     expect(tlsDid).toBeDefined();
   });
 
-  it('should instantiate TLSDID with ethers provider', () => {
-    let tlsDid = new TLSDID(c.etherPrivKey, {
+  it('should instantiate TLS-DID with ethers provider', () => {
+    let tlsDid = new TLSDID(domain, c.etherPrivKey, {
       registry: c.registryAddress,
       providerConfig: {
         provider: new providers.JsonRpcProvider(c.jsonRpcUrl),
@@ -45,10 +29,13 @@ describe('TLSDID instantiation', () => {
   });
 });
 
-describe('TLSDID', () => {
+describe('TLS-DID operations', () => {
+  let pemKey: string;
+  let tlsDid: TLSDID;
+
   beforeAll(() => {
     pemKey = readFileSync(__dirname + c.privKeyPath, 'utf8');
-    tlsDid = new TLSDID(c.etherPrivKey, {
+    tlsDid = new TLSDID(domain, c.etherPrivKey, {
       registry: c.registryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
@@ -56,127 +43,132 @@ describe('TLSDID', () => {
     });
   });
 
-  it('should deploy new TLSDID contract', async () => {
-    await tlsDid.deployContract();
+  it('should register TLS-DID', async () => {
+    await tlsDid.register();
 
-    //Assert that contract has an address with the correct length
-    address = tlsDid.getAddress();
-    expect(address.length).toBe(42);
-  });
+    //Assert that expiry is updated in TLS-DID object
+    expect(tlsDid.registered).toBeTruthy();
 
-  it('should connect to TLSDID contract', async () => {
-    const tlsDidDuplicate = new TLSDID(c.etherPrivKey, {
+    //Assert that expiry is stored TLS-DID registry
+    const tlsDidDuplicate = new TLSDID(domain, c.etherPrivKey, {
       registry: c.registryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
       },
     });
+    await tlsDidDuplicate.loadDataFromRegistry();
 
-    //Assert that connecting to existing TLSDID Contract does not throw error
-    expect(
-      async () => await tlsDidDuplicate.connectToContract(address)
-    ).not.toThrow();
-
-    //Assert that connected TLSDID Contract has correct address
-    expect(tlsDidDuplicate.getAddress()).toEqual(address);
+    expect(tlsDidDuplicate.registered).toBeTruthy();
   });
 
-  it('should register TLSDID contract', async () => {
-    const domain = 'example.org';
-    await tlsDid.registerContract(domain, pemKey);
+  it('should add attribute', async () => {
+    await tlsDid.addAttribute('parent/child', 'value');
 
-    //Assert that DID to contract mapping is stored in registry
-    const registry = new Contract(
-      c.registryAddress,
-      TLSDIDRegistryContract.abi,
-      new providers.JsonRpcProvider(c.jsonRpcUrl)
-    );
-    const addresses = await registry.getContracts(domain);
-    expect(addresses.includes(tlsDid.getAddress())).toBeTruthy();
-
-    //Assert that domain is stored TLSDID contract
-    const tlsDidDuplicate = new TLSDID(c.etherPrivKey, {
-      registry: c.registryAddress,
-      providerConfig: {
-        rpcUrl: c.jsonRpcUrl,
-      },
-    });
-    await tlsDidDuplicate.connectToContract(address);
-    expect(tlsDidDuplicate.domain).toBe(domain);
-  });
-
-  it('should add attribute to TLSDID contract', async () => {
-    await tlsDid.addAttribute('parent/child', 'value', pemKey);
-
-    //Assert that the new attribute is stored in the TLSDID object
-    const includedO = tlsDid.attributes.some((item) => {
+    //Assert that the new attribute is stored in the TLS-DID object
+    const includedA = tlsDid.attributes.some((item) => {
       return item.path === 'parent/child' && item.value === 'value';
     });
-    expect(includedO).toBeTruthy();
+    expect(includedA).toBeTruthy();
 
-    //Assert that the new attribute is stored in the TLSDID contract
-    const tlsDidDuplicate = new TLSDID(c.etherPrivKey, {
+    //Assert that expiry is stored TLS-DID registry
+    const tlsDidDuplicate = new TLSDID(domain, c.etherPrivKey, {
       registry: c.registryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
       },
     });
-    const test = await tlsDidDuplicate.connectToContract(address);
-    const includedC = tlsDidDuplicate.attributes.some((item) => {
+    await tlsDidDuplicate.loadDataFromRegistry();
+
+    const includedB = tlsDidDuplicate.attributes.some((item) => {
       return item.path === 'parent/child' && item.value === 'value';
     });
-    expect(includedC).toBeTruthy();
+    expect(includedB).toBeTruthy();
   });
 
-  it('should add expiry to TLSDID contract', async () => {
+  it('should add expiry', async () => {
     const expiry = new Date('12 / 12 / 2040');
-    await tlsDid.setExpiry(expiry, pemKey);
+    await tlsDid.setExpiry(expiry);
 
-    //Assert that expiry is updated in TLSDID object
+    //Assert that expiry is updated in TLS-DID object
     expect(tlsDid.expiry).toBe(expiry);
 
-    //Assert that expiry is stored TLSDID contract
-    const tlsDidDuplicate = new TLSDID(c.etherPrivKey, {
+    //Assert that expiry is stored TLS-DID registry
+    const tlsDidDuplicate = new TLSDID(domain, c.etherPrivKey, {
       registry: c.registryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
       },
     });
-    await tlsDidDuplicate.connectToContract(address);
+    await tlsDidDuplicate.loadDataFromRegistry();
+
     expect(tlsDidDuplicate.expiry).toStrictEqual(expiry);
   });
 
-  it('should register chain', async () => {
+  it('should add chain', async () => {
     //Register new chain
     const chain = [
       '-----BEGIN CERTIFICATE-----\nCertA\n-----END CERTIFICATE-----',
       '-----BEGIN CERTIFICATE-----\nCertB\n-----END CERTIFICATE-----',
     ];
-    await tlsDid.addChain(chain, pemKey);
+    await tlsDid.addChain(chain);
 
-    //Assert that expiry is stored TLSDID contract
-    const tlsDidDuplicate = new TLSDID(c.etherPrivKey, {
+    //Assert that expiry is stored TLS-DID registry
+    const tlsDidDuplicate = new TLSDID(domain, c.etherPrivKey, {
       registry: c.registryAddress,
       providerConfig: {
         rpcUrl: c.jsonRpcUrl,
       },
     });
+    await tlsDidDuplicate.loadDataFromRegistry();
 
-    await tlsDidDuplicate.connectToContract(address);
-    expect(tlsDidDuplicate.chains[tlsDidDuplicate.chains.length - 1]).toEqual(
-      chain
-    );
+    expect(tlsDidDuplicate.chain).toEqual(chain);
+  });
+
+  it('should add signature', async () => {
+    await tlsDid.sign(pemKey);
+
+    //Assert that expiry is stored TLS-DID registry
+    const tlsDidDuplicate = new TLSDID(domain, c.etherPrivKey, {
+      registry: c.registryAddress,
+      providerConfig: {
+        rpcUrl: c.jsonRpcUrl,
+      },
+    });
+    await tlsDidDuplicate.loadDataFromRegistry();
+
+    expect(tlsDidDuplicate.signature).toEqual(tlsDid.signature);
   });
 
   it('should delete DID', async () => {
     await tlsDid.delete();
 
-    expect(tlsDid.domain).toEqual(null);
+    //The last change block index should be reset and tls did objects values set to null
     expect(tlsDid.attributes).toEqual([]);
     expect(tlsDid.expiry).toEqual(null);
     expect(tlsDid.signature).toEqual(null);
-    expect(tlsDid.chains).toEqual([]);
+    expect(tlsDid.chain).toEqual([]);
 
-    await expect(tlsDid.connectToContract(address)).rejects.toThrow();
+    //The registration however is not deleted in the registry contract
+    expect(tlsDid.domain).toEqual(domain);
+    expect(tlsDid.registered).toEqual(true);
+
+    //Assert the TLS-DID registry last change block is set to 0
+    const tlsDidDuplicate = new TLSDID(domain, c.etherPrivKey, {
+      registry: c.registryAddress,
+      providerConfig: {
+        rpcUrl: c.jsonRpcUrl,
+      },
+    });
+    await tlsDidDuplicate.loadDataFromRegistry();
+
+    //The last change block index should be reset and tls did objects values set to null
+    expect(tlsDid.attributes).toEqual([]);
+    expect(tlsDid.expiry).toEqual(null);
+    expect(tlsDid.signature).toEqual(null);
+    expect(tlsDid.chain).toEqual([]);
+
+    //The registration however is not deleted in the registry contract
+    expect(tlsDid.domain).toEqual(domain);
+    expect(tlsDid.registered).toEqual(true);
   });
 });

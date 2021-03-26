@@ -1,6 +1,6 @@
 # TLS-DID Method
 
-The TLS-DID method is a [DID Method](https://www.w3.org/TR/did-core/#dfn-did-methods) that makes use the internet's existing [Transport Layer Security (TLS)](https://en.wikipedia.org/wiki/Transport_Layer_Security) infrastructure. The TLS-DID method allows you to create and verify DIDs on the Ethereum blockchain verifiably linked to an existing Fully-Qualified Domain Names (FQDN). The link between a DID and a FQDN is created using of the FQDN's TLS key pair.
+The TLS-DID method is a [DID Method](https://www.w3.org/TR/did-core/#dfn-did-methods) that makes use of the internet's existing [Transport Layer Security (TLS)](https://en.wikipedia.org/wiki/Transport_Layer_Security) infrastructure. The TLS-DID method allows you to create and verify DIDs on the Ethereum blockchain verifiably linked to a domain. The link between a DID and a domain is created using of the domain's TLS key pair.
 
 - [TLS-DID Method](#tls-did-method)
   - [TLS-DID Format](#tls-did-format)
@@ -49,9 +49,8 @@ did:tls:tls-did.de
 
 In this section we describe the four operations each DID method must specify.
 
+**Claim** Ethereum address/TLS-DID identifier pair
 ### Create
-
-To create a TLS-DID we deploy a TLS-DID smart contract linked to a FQDN using the FQDN's TLS key pair to the Ethereum blockchain and register the contract in the TLS-DID registry smart contract with its TLS-DID method-specific identifier (FQDN).
 
 Prerequisites:
 
@@ -61,45 +60,48 @@ Prerequisites:
 
 Creating the initial tls-did:
 
-1. Deploy TLS-DID smart contract
-2. Store the FQDN in TLS-DID smart contract
-3. Store the TLS certificate chain in TLS-DID smart contract
-3. Store a signature(hash(TLS-DID smart contract's address, FQDN, TLS certificate chain)) in the TLS-DID smart contract.
-4. Store the FQDN and the TLS-DID smart contract address in the TLS-DID registry smart contract
+1. Register claim to an TLS-DID identifier on TLS-DID registry smart contract
+2. Store the TLS certificate chain on chain using the TLS-DID registry smart contract
+3. Store a signature(hash(domain, TLS certificate chain)) on chain using the TLS-DID registry smart contract
 
-**Note** that we do not verify the correctness of the link between a TLS-DID and a FQDN on creation. Therefore, anyone can register a smart contract with any identifier. We verify the link in the [read/resolve](#read) operation.
+**Note** that we do not verify the correctness of the link between a TLS-DID and a domain on creation. Therefore, anyone can register a claim to an identifier. We verify the link in the [read/resolve](#read) operation.
 
 ### Update
 
-We store the DID documents data in the [TLSDID Contract](#TLSDID-Contract). We store data as a combination of path and value. Currently we only support string values. Furthermore, we do not check the data, this means, that you are responsible that the data you add, adheres to the [DID document data model specification](https://www.w3.org/TR/did-core/#data-model).
+We store the DID document's data in the [TLSDID Contract](#TLSDID-Contract). We store data as a combination of path and value. Currently we only support string values. Furthermore, we do not check the data, this means, that you are responsible that the data you add, adheres to the [DID document data model specification](https://www.w3.org/TR/did-core/#data-model).
 
-Only the controller of the Ethereum account that created the [TLSDID Contract](#TLSDID-Contract) can update the contract and after each data update, the [TLSDID Contract's](#TLSDID-Contract) signature is updated using the TLS private key.
+Only the controller of the Ethereum account that created initial claim can update the data stored on chain using the TLS-DID registry smart contract.
 
 Prerequisites:
 
 - TLS encryption key
-- Ethereum account with sufficient funds that created the [TLSDID Contract](#TLSDID-Contract)
+- The Ethereum account with sufficient funds used in the [create](#create) operation
 
 Updating the DID document:
 
-1. Store path-value pair in TLS-DID smart contract
-2. Overwrite the signature(hash(TLS-DID smart contract's address, FQDN, TLS certificate chain, path-value pairs)) in the TLS-DID smart contract
+1. Store path-value pair on chain using the TLS-DID registry smart contract
+2. Store updated signature(hash(domain, TLS certificate chain, path-value pairs)) on chain using the TLS-DID registry smart contract
 
-As an extension to the DID document standard we allow you to store an expiry date in the [TLSDID Contract](#TLSDID-Contract). The [read/resolve](#read) operation interprets the [TLSDID Contract](#TLSDID-Contract) to be valid only if the expiry date is in the future.
+As an extension to the DID document standard we allow you to store an expiry date on chain using the TLS-DID registry smart contract. The [read/resolve](#read) operation interprets the claim to the TLS-DID identifier to be valid only if the expiry date is in the future.
 
 ### Read
 
-To resolve a TLS-DID we first query the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). This results in a set of 0-* [TLSDID Contract](#TLSDID-Contract) addresses. If zero addresses are found, the TLS-DID does not resolve. If one address is found we verify the correctness of the [TLSDID Contract's](#TLSDID-Contract) data. If more than one addresses is found, we verify the correctness of the contained data of each [TLSDID Contract](#TLSDID-Contract). In the case of multiple addresses, the DID only resolves if exactly one [TLSDID Contract](#TLSDID-Contract) is valid.
+To resolve a TLS-DID we query [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract) for all claims for the TLS-DID identifier. This results in a set of 0-* claims. If zero claims are found, the TLS-DID does not resolve. If one claim is found we verify the correctness of the claim. If more than one claim is found, we verify the correctness of each claim. The TLS-DID only resolves if exactly one claim is valid.
 
-To verify the validity of a [TLSDID Contract](#TLSDID-Contract), we first verify that its expiration date is in the future. Then we load the stored TLS chain and check it against a set of trusted root certs. If the chain is valid, we check the FQDN cert against the issuing CA's OCSP if available. In the final step, we read the DID document data from the [TLSDID Contract](#TLSDID-Contract) and verify the [TLSDID Contracts](#TLSDID-Contract) signature against the stored data and the verified FQDN cert. If the signature is valid we deem the [TLSDID Contract](#TLSDID-Contract) to be valid.
+To verify the validity of a claim, we read the last change event block from the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract). If none is found the claim is invalid, since no chain and signature could be read from chain. If a last change event block is found, we query the block for all change events associated with the claim and store the change event data. Each change event contains the previous last change block. We repeat the process until we reach a change event with a last change block number equal to zero. We aggregate the data stored in the change events. We use the most recent signature, chain and expiry. We verify that:
+- the expiry it is in the future, if am expiry was stored on chain,
+- the domain's TLS certificate was not revoked, if [OCSP](https://en.wikipedia.org/wiki/Online_Certificate_Status_Protocol) is supported,
+- a TLS root certificate can be found for the TLS certificate chain,
+- the TLS certificate chain including the TLS root certificate is valid,
+- `verify(signature, hash(domain, TLS certificate chain, path-value pairs))` is valid.
 
-If exactly one valid [TLSDID Contract](#TLSDID-Contract) is found the requested DID document is constructed from the [TLSDID Contract's](#TLSDID-Contract) data.
+If exactly one claim fulfills the requirements we construct a DID Document using the attributes path/value combinations stored in the change events on chain.
 
 Currently the TLS-DID libraries do not allow to resolve paths/fragments of the DID Document (https://github.com/digitalcredentials/tls-did/issues/28).
 
 ### Delete
 
-To delete a TLS-DID we remove the corresponding smart contract from the Ethereum blockchain. Furthermore, we set the smart contract address stored in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract) to *0x0000000000000000000000000000000000000000*.
+To delete a TLS-DID, we set the last change event block number of the claim's TLS-DID identifier to 0 in the [TLSDIDRegistry Contract](#TLSDIDRegistry-Contract).
 
 # Security Considerations
 
@@ -150,7 +152,7 @@ The time to resolve one to multiple TLS-DID contracts scales linearly.
 
 In a benchmark run with a local testnet the resolve-time of:
  - one TLS-DID contract was approximately 600ms.
- - 100 TLS-DID contracts was approximately 57960ms.
+ - 100 TLS-DID contracts was approximately 20400ms.
 
 The mitigation to this attack, is the cost of deployment of a TLS-DID contract to the ethereum mainnet.
 

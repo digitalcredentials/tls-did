@@ -6,7 +6,8 @@
   "scripts": {
     "build": "npx tsc",
     "test": "jest",
-    "release": "npm run build & np"
+    "release": "npm run build & np",
+    "reload": "rm -rf node_modules && rm package-lock.json && npm i"
   },
   "repository": {
     "type": "git",
@@ -24,14 +25,14 @@
     "@babel/preset-env": "^7.11.5",
     "@types/jest": "^26.0.15",
     "jest": "^26.5.0",
+    "np": "^7.2.0",
     "ts-jest": "^26.4.3",
-    "typescript": "^4.0.5",
-    "np": "^7.2.0"
+    "typescript": "^4.0.5"
   },
   "dependencies": {
-    "@digitalcredentials/tls-did-registry": "^0.1.1",
+    "@digitalcredentials/tls-did-registry": "github:tls-did-project/tls-did-registry#feature/eventDrivenRegistry",
     "@digitalcredentials/tls-did-resolver": "^0.1.1",
-    "ethers": "^5.0.17",
-    "save-dev": "^0.0.1-security"
+    "@digitalcredentials/tls-did-utils": "github:digitalcredentials/tls-did-utils#master",
+    "ethers": "^5.0.17"
   }
 }

@@ -1,4 +1,5 @@
 import { chainToCerts } from '../utils';
+
 describe('Utils', () => {
   it('should split split chain into pem array', () => {
     let chain = `-----BEGIN CERTIFICATE-----
