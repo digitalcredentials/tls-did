@@ -166,13 +166,15 @@ export class TLSDID {
 
   /**
    * Adds ethereum account to claimants of TLS-DID identifier (domain)
+   * @param {number} [gasLimit] - Optional gasLimit for the ethereum transaction
    */
-  async register(): Promise<void> {
+  async register(gasLimit?: number): Promise<void> {
     if (this.domain?.length === 0) {
       throw new Error('No domain provided');
     }
 
-    const tx = await this.registry.registerOwnership(this.domain);
+    const options: { gasLimit?: number } = { gasLimit };
+    const tx = await this.registry.registerOwnership(this.domain, options);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.registered = true;
@@ -185,13 +187,15 @@ export class TLSDID {
    * Adds attribute to TLS-DID Document stored on chain
    * @param {string} path - Path of value, format 'parent/child' or 'parent[]/child'
    * @param {string} value - Value stored in path
+   * @param {number} [gasLimit] - Optional gasLimit for the ethereum transaction
    */
-  async addAttribute(path: string, value: string): Promise<void> {
+  async addAttribute(path: string, value: string, gasLimit?: number): Promise<void> {
     if (this.domain?.length === 0) {
       throw new Error('No domain provided');
     }
 
-    const tx = await this.registry.addAttribute(this.domain, path, value);
+    const options: { gasLimit?: number } = { gasLimit };
+    const tx = await this.registry.addAttribute(this.domain, path, value, options);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.attributes.push({ path, value });
@@ -203,14 +207,16 @@ export class TLSDID {
   /**
    * Updates expiry of TLS-DID on chain
    * @param {Date} date - Expiry date
+   * @param {number} [gasLimit] - Optional gasLimit for the ethereum transaction
    */
-  async setExpiry(date: Date): Promise<void> {
+  async setExpiry(date: Date, gasLimit?: number): Promise<void> {
     if (this.domain?.length === 0) {
       throw new Error('No domain provided');
     }
-
     const expiry = date.getTime();
-    const tx = await this.registry.setExpiry(this.domain, expiry);
+
+    const options: { gasLimit?: number } = { gasLimit };
+    const tx = await this.registry.setExpiry(this.domain, expiry, options);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.expiry = date;
@@ -222,8 +228,9 @@ export class TLSDID {
   /**
    * Updates signature stored on chain
    * @param {string} key - Signing tls key in pem format
+   * @param {number} [gasLimit] - Optional gasLimit for the ethereum transaction
    */
-  async sign(key: string): Promise<void> {
+  async sign(key: string, gasLimit?: number): Promise<void> {
     if (this.domain?.length === 0) {
       throw new Error('No domain provided');
     }
@@ -233,7 +240,8 @@ export class TLSDID {
     const signature = sign(key, hash);
 
     //Update contract with new signature
-    const tx = await this.registry.setSignature(this.domain, signature);
+    const options: { gasLimit?: number } = { gasLimit };
+    const tx = await this.registry.setSignature(this.domain, signature, options);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.signature = signature;
@@ -245,15 +253,18 @@ export class TLSDID {
   /**
    * Updates certs stored on chain
    * @dev Do not store root certificates, they are passed to the resolver
-   * @param {string[]}certs
+   * @param {string[]} certs - TLS certificates in pem format up to but not including the root certificate
+   * @param {number} [gasLimit] - Optional gasLimit for the ethereum transaction
    */
-  async addChain(certs: string[]) {
+  async addChain(certs: string[], gasLimit?: number) {
     if (this.domain?.length === 0) {
       throw new Error('No domain provided');
     }
 
     const joinedCerts = certs.join('\n');
-    const tx = await this.registry.addChain(this.domain, joinedCerts);
+
+    const options: { gasLimit?: number } = { gasLimit };
+    const tx = await this.registry.addChain(this.domain, joinedCerts, options);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.chain = certs;
@@ -264,9 +275,15 @@ export class TLSDID {
 
   /**
    * Deletes TLS-DID by resetting the reference to the block containing the last change to 0
+   * @param {number} [gasLimit] - Optional gasLimit for the ethereum transaction
    */
-  async delete() {
-    const tx = await this.registry.remove(this.domain);
+  async delete(gasLimit?: number) {
+    if (this.domain?.length === 0) {
+      throw new Error('No domain provided');
+    }
+
+    const options: { gasLimit?: number } = { gasLimit };
+    const tx = await this.registry.remove(this.domain, options);
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       this.attributes = [];

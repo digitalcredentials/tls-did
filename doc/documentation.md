@@ -39,9 +39,11 @@ const tlsDid = new TLSDID(domain, etherPrivateKey, {
 
 After you instantiated the TLS-DID object you can either claim control over a TLS-DID identifier (domain) or connect to an existing claim. Claims are stored as TLS-DID identifier (domain)/ethereum address combinations on the [TLS-DID Registry Contract](#TLSDIDRegistry-Contract). To connect to an existing claim you have to use a TLS-DID object instantiated with the same TLS-DID identifier (domain)/ethereum address combination.
 
+**Note** that all methods storing data on chain allow you to set a optional gasLimit.
+
 ```javascript
 //Register new claim
-await tlsDid.register();
+await tlsDid.register(optionalGasLimit);
 ```
 
 ```javascript
@@ -58,14 +60,14 @@ const chain = [
   '-----BEGIN CERTIFICATE-----\nIntermediateCert\n-----END CERTIFICATE-----',
 ];
 //Store cert chain in on chain
-await tlsDid.addChain(chain);
+await tlsDid.addChain(chain, optionalGasLimit);
 ```
 
 In the final step, you store a signature of the previously stored data on chain. The data is signed with your domain's private TLS key in pem format.
 
 ```javascript
 //Sign all data and store signature on chain
-await tlsDid.sign(pemKey);
+await tlsDid.sign(pemKey, optionalGasLimit);
 ```
 ### Update
 
@@ -77,25 +79,25 @@ You can add an expiry. If the expiry is in the past, you can still use `await tl
 //Define expiry as an JS Data object
 const expiry = new Date('12 / 12 / 2040');
 //Add or update the expiry
-await tlsDid.setExpiry(expiry);
+await tlsDid.setExpiry(expiry, optionalGasLimit);
 ```
 
 You can add attributes to your DID Document with the addAttribute method. The addAttribute method expects a path and value. The path resembles XPath. The value can currently only be a string. The [read/resolve](#read) constructs the DID document from the path/value combinations.
 
 ```javascript
 //Adds {parent: {child: value}} to the DID document
-await tlsDid.addAttribute('parent/child', 'value');
+await tlsDid.addAttribute('parent/child', 'value', optionalGasLimit);
 //Adds {array: [{element: value}]} to the DID document
-await tlsDid.addAttribute('arrayA[0]/element', 'value');
+await tlsDid.addAttribute('arrayA[0]/element', 'value', optionalGasLimit);
 //Adds {array: [value]} to the DID document
-await tlsDid.addAttribute('arrayB[0]', 'value');
+await tlsDid.addAttribute('arrayB[0]', 'value', optionalGasLimit);
 ```
 
 To certify the updated data you have to sign the updated data. You can run multiple updates before signing. The data is signed with your domain's private TLS key in pem format.
 
 ```javascript
 //Sign all data and store signature on chain
-await tlsDid.sign(pemKey);
+await tlsDid.sign(pemKey, optionalGasLimit);
 ```
 ### Read
 
