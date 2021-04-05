@@ -70,7 +70,7 @@ describe('TLS-DID operations', () => {
     });
     expect(includedA).toBeTruthy();
 
-    //Assert that expiry is stored TLS-DID registry
+    //Assert that the new attribute is stored on chain
     const tlsDidDuplicate = new TLSDID(domain, c.etherPrivKey, {
       registry: c.registryAddress,
       providerConfig: {

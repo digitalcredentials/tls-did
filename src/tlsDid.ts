@@ -1,7 +1,7 @@
 import { Wallet, Contract, Event, providers, EventFilter, BigNumber } from 'ethers';
 import { hexZeroPad } from 'ethers/lib/utils';
 import TLSDIDRegistry from '@digitalcredentials/tls-did-registry/build/contracts/TLSDIDRegistry.json';
-import { REGISTRY, NetworkConfig, Attribute } from '@digitalcredentials/tls-did-utils';
+import { REGISTRY, NetworkConfig, Attribute, sortEvents } from '@digitalcredentials/tls-did-utils';
 import { chainToCerts } from './utils';
 import { sign, hashContract, configureProvider } from '@digitalcredentials/tls-did-utils';
 
@@ -93,8 +93,8 @@ export class TLSDID {
       throw new Error(`No event found in block: ${block}`);
     }
 
-    //Sort events by most recent to most dated
-    events.sort((a, b) => b.args.previousChange - a.args.previousChange);
+    //Sort events by descending previousChange block number
+    events = sortEvents(events);
 
     //The data contained is added to the internal state depending on change type
     events.forEach((event) => {
