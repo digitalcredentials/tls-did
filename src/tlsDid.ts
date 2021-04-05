@@ -103,7 +103,7 @@ export class TLSDID {
         case event.event == 'AttributeChanged':
           const path = event.args.path;
           const value = event.args.value;
-          this.attributes.push({ path, value });
+          this.attributes.unshift({ path, value });
           break;
         //The most recent expiry change is stored
         case event.event == 'ExpiryChanged' && this.expiry == null:
