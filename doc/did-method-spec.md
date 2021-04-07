@@ -4,7 +4,7 @@ The TLS-DID method is a [DID Method](https://www.w3.org/TR/did-core/#dfn-did-met
 
 - [TLS-DID Method](#tls-did-method)
   - [TLS-DID Format](#tls-did-format)
-  - [TLS-DID Operations](#tls-did-operations)
+  - [CRUD Operations](#crud-operations)
     - [Create](#create)
     - [Update](#update)
     - [Read](#read)
@@ -45,7 +45,7 @@ Example TLS-DID:
 ```
 did:tls:tls-did.de
 ```
-## TLS-DID Operations
+## CRUD Operations
 
 In this section we describe the four operations each DID method must specify.
 
