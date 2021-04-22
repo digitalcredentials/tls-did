@@ -22,15 +22,6 @@ The TLS-DID method is a [DID Method](https://www.w3.org/TR/did-core/#dfn-did-met
 - [Privacy Considerations](#privacy-considerations)
   - [Surveillance](#surveillance)
   - [Stored Data Compromise](#stored-data-compromise)
-  - [Unsolicited Traffic](#unsolicited-traffic)
-  - [Misattribution](#misattribution)
-  - [Correlation](#correlation)
-  - [Identification](#identification)
-  - [Secondary Use](#secondary-use)
-  - [Disclosure](#disclosure)
-  - [Exclusion](#exclusion)
-
-- [Privacy Considerations](#privacy-considerations)
 
 ## TLS-DID Format
 
@@ -172,17 +163,3 @@ track who and how often a TLS-DID is resolved.
 ## Stored Data Compromise
 
 The information stored in the TLS-DID registry and TLS-DID contracts is publicly readable, therefore no private information should be stored on them.
-
-## Unsolicited Traffic
-
-## Misattribution
-
-## Correlation
-
-## Identification
-
-## Secondary Use
-
-## Disclosure
-
-## Exclusion
