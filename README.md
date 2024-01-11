@@ -1,3 +1,5 @@
+## This repo was archived on January 11, 2024 by [[alexfigtree](https://github.com/alexfigtree)]
+
 # Documentation
 
 The [tls-did](https://github.com/digitalcredentials/tls-did) and the [tls-did-resolver](https://github.com/digitalcredentials/tls-did) library [documentation](https://github.com/digitalcredentials/tls-did/tree/master/doc/documentation.md).
